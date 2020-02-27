@@ -1,10 +1,14 @@
 #include "reader.h"
 
+#include <stdbool.h>
 #include <string.h>
 
 #include <termios.h>
 
 #include "reader_detail.h"
+
+const UCHAR kEcpBAtr[] = { 0X3B, 0X8B, 0X01, 0X52, 0X75, 0X74, 0X6F, 0X6B, 0X65, 0X6E, 0X20, 0X44, 0X53, 0X42, 0XA3 };
+const UCHAR kEcp20Atr[] = { 0x3B, 0x8B, 0x01, 0x52, 0x75, 0x74, 0x6F, 0x6B, 0x65, 0x6E, 0x20, 0x44, 0x53, 0x20, 0xC1 };
 
 reader_status_t reader_status(io_status_t error) {
     switch (error) {
@@ -31,6 +35,12 @@ reader_status_t reader_status(io_status_t error) {
     return reader_status_internal_error;
 }
 
+reader_status_t reader_reset(Reader* reader);
+
+bool is_rutoken_ecp_b_atr(const UCHAR* atr, DWORD atrLength) {
+    return (sizeof(kEcpBAtr) == atrLength) && !memcmp(kEcpBAtr, atr, atrLength);
+}
+
 reader_status_t reader_open(Reader* reader, const char* readerName) {
     io_status_t r;
 
@@ -42,6 +52,12 @@ reader_status_t reader_open(Reader* reader, const char* readerName) {
     if (r != IO_ERROR__OK) {
         reader_close(reader);
         return reader_status(r);
+    }
+
+    reader_status_t r1 = reader_power_on(reader);
+    if (r1 != reader_status_ok) {
+        reader_close(reader);
+        return r1;
     }
 
     return reader_power_off(reader);
@@ -99,8 +115,13 @@ reader_status_t reader_reset(Reader* reader) {
     if (rxLength < 2 || rxBuffer[rxLength - 1] != 0x00 || rxBuffer[rxLength - 2] != 0x90)
         return reader_status_communication_error;
 
-    reader->atrLength = rxLength - 2;
-    memcpy(reader->atr, rxBuffer, reader->atrLength);
+    if (!is_rutoken_ecp_b_atr(rxBuffer, rxLength - 2)) {
+        return reader_status_reader_not_found;
+    }
+
+    // Replace original ATR with fake one, that is supported by rtPKCS11ECP
+    reader->atrLength = sizeof(kEcp20Atr);
+    memcpy(reader->atr, kEcp20Atr, sizeof(kEcp20Atr));
 
     return reader_status_ok;
 }
