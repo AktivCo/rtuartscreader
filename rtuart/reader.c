@@ -36,6 +36,8 @@ reader_status_t reader_status(io_status_t error) {
 }
 
 reader_status_t reader_reset(Reader* reader);
+reader_status_t reader_apdu_reset(Reader* reader);
+reader_status_t reader_hardware_reset(Reader* reader);
 
 bool is_rutoken_ecp_b_atr(const UCHAR* atr, DWORD atrLength) {
     return (sizeof(kEcpBAtr) == atrLength) && !memcmp(kEcpBAtr, atr, atrLength);
@@ -104,6 +106,29 @@ reader_status_t reader_power_on(Reader* reader) {
 }
 
 reader_status_t reader_reset(Reader* reader) {
+    reader_status_t r = reader_apdu_reset(reader);
+    if (r == reader_status_ok) {
+        return r;
+    }
+
+    // Worst case: smartcard is in chain command
+    r = reader_hardware_reset(reader);
+    if (r != reader_status_ok) {
+        return r;
+    }
+
+    return reader_apdu_reset(reader);
+}
+
+reader_status_t reader_hardware_reset(Reader* reader) {
+    io_status_t r;
+
+    r = TrAPI_Reset(&(reader->handle));
+
+    return reader_status(r);
+}
+
+reader_status_t reader_apdu_reset(Reader* reader) {
     UCHAR txBuffer[] = { 0x80, 0x00, 0x00, 0x00, 0x00, 0x0F };
     UCHAR rxBuffer[0x0F + 2] = { 0 };
     DWORD rxLength = sizeof(rxBuffer);
