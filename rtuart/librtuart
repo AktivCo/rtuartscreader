@@ -1,0 +1,3 @@
+DEVICENAME        /dev/ttyAMA0
+FRIENDLYNAME      "Rutoken ECP B"
+LIBPATH           /usr/lib/pcsc/drivers/serial/librtuart.so
