@@ -1,0 +1,3 @@
+*.h filter=clang-format clang-format=cpp
+*.c filter=clang-format clang-format=cpp
+*.cpp filter=clang-format clang-format=cpp
