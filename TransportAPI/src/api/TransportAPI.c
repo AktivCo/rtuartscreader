@@ -155,3 +155,27 @@ TrAPI_Synchronise(
 
     return (TrAPI_TransmitEx(phDev, TRANSPORT_CMD__SYNCHRONISE, NULL, 0, NULL, &dwLngBufRecv));
 }
+
+/*
+ * Reset Device
+ */
+io_status_t
+TrAPI_Reset(
+    PDEVICE_HANDLE phDev) {
+    uint16_t dwLngBufRecv = 0;
+    io_status_t ret;
+
+    ret = TrAPI_TransmitEx(phDev, TRANSPORT_CMD__RESET, NULL, 0, NULL, &dwLngBufRecv);
+    if (ret != IO_ERROR__OK) {
+        perror("TrAPI_TransmitEx failed during TRANSPORT_CMD__RESET: ");
+
+        return ret;
+    }
+
+    ret = TrAPI_Synchronise(phDev);
+    if (ret != IO_ERROR__OK) {
+        perror("TrAPI_Synchronise failed after TRANSPORT_CMD__RESET: ");
+    }
+
+    return ret;
+}

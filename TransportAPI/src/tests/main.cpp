@@ -1,7 +1,8 @@
-#include <cmath>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <cmath>
 
 #include <termios.h>
 
@@ -245,6 +246,15 @@ int main(int argc, char **argv) {
         log_success("Ok!\n");
     }
 
+    printf("Testing TrAPI_Synchronise\r\n");
+    lRet = TrAPI_Synchronise(&hDev);
+    if (lRet) {
+        log_error("Error while synchronizing device\r\n");
+        goto __ENDPROGRAMM;
+    } else {
+        log_success("Ok!\n");
+    }
+
     memset(abAnswer, 0xCC, sizeof(abAnswer));
 
     //Standart functionality test
@@ -358,6 +368,15 @@ int main(int argc, char **argv) {
     } else {
         log_success("APDU return code: 0x%02x 0x%02x\r\n", abAnswer[dwReplyLength - 2], abAnswer[dwReplyLength - 1]);
         memset(abAnswer, 0xCC, sizeof(abAnswer));
+    }
+
+    printf("Testing TrAPI_Reset\r\n");
+    lRet = TrAPI_Reset(&hDev);
+    if (lRet) {
+        log_error("Error while reseting device: 0x%02x\r\n", lRet);
+        goto __ENDPROGRAMM;
+    } else {
+        log_success("Ok!\n");
     }
 
     log_info("Testing transport protocol...\r\n");

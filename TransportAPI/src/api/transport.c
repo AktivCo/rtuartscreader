@@ -41,7 +41,7 @@ io_status_t TrAPI_RecvByte(PDEVICE_HANDLE phDev, uint8_t *pbCh) {
             if ((dwTimeout * 50) > IO_WAIT_TIME_PACKETS)
                 return IO_ERROR__TIMEOUT;
         } else
-            return IO_ERROR__OK;
+            break;
     }
     return IO_ERROR__OK;
 }
@@ -263,7 +263,10 @@ TrAPI_RecvFrame(
 
     // Packet type checking
     if (dwRet == IO_ERROR__OK) {
-        if (pHdr->bPID != TRANSPORT_CMD__SYNCHRONISE && pHdr->bPID != TRANSPORT_CMD__TRANSMIT && pHdr->bPID != TRANSPORT_CMD__CLOSE)
+        if (pHdr->bPID != TRANSPORT_CMD__SYNCHRONISE && //
+            pHdr->bPID != TRANSPORT_CMD__TRANSMIT &&    //
+            pHdr->bPID != TRANSPORT_CMD__CLOSE &&       //
+            pHdr->bPID != TRANSPORT_CMD__RESET)
             dwRet = IO_ERROR__INVALID_HDR_INFO;
     }
 

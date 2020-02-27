@@ -19,6 +19,7 @@ extern "C" {
 #define TRANSPORT_CMD__SYNCHRONISE 1
 #define TRANSPORT_CMD__TRANSMIT 2
 #define TRANSPORT_CMD__CLOSE 3
+#define TRANSPORT_CMD__RESET 4
 
 // Transport protocol v.1
 typedef struct {

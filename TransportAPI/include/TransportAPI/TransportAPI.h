@@ -45,6 +45,10 @@ TrAPI_Transmit(
     uint8_t *pBufRecv,
     uint16_t *pdwLngBufRecv);
 
+io_status_t
+TrAPI_Reset(
+    PDEVICE_HANDLE phDev);
+
 #ifdef __cplusplus
 }
 #endif
