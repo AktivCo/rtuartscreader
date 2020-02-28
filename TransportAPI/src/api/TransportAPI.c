@@ -17,6 +17,7 @@ TrAPI_OpenDevice(
     PDEVICE_HANDLE phDev,
     const char *acComPortName,
     uint32_t BaudRate) {
+    LOG_INFO("Device: %p, port: %s, baudRate: %u", phDev, acComPortName, BaudRate);
     DEVICE_HANDLE h = { 0 };
 
     TrAPI_SetPacketNum(&h, 1);
@@ -24,17 +25,15 @@ TrAPI_OpenDevice(
     io_status_t ret;
 
     ret = com_init(&h.hPort, acComPortName, BaudRate);
-
     if (ret != IO_ERROR__OK) {
-        perror("COM port init failed: ");
+        LOG_ERROR("COM port init failed: %d", ret);
 
         return ret;
     }
 
     ret = TrAPI_Synchronise(&h);
-
     if (ret != IO_ERROR__OK) {
-        perror("TrAPI_Synchronise failed: ");
+        LOG_ERROR("TrAPI_Synchronise failed: %d", ret);
 
         return ret;
     }
@@ -46,12 +45,13 @@ TrAPI_OpenDevice(
 
 io_status_t TrAPI_CloseDevice(
     PDEVICE_HANDLE phDev) {
+    LOG_INFO("Device: %p", phDev);
     int ret;
 
     ret = com_deinit(phDev->hPort);
 
     if (ret) {
-        perror("COM port deinit failed: ");
+        LOG_ERROR("COM port deinit failed:  %d", ret);
     }
 
     return ret;
@@ -77,7 +77,7 @@ TrAPI_TransmitEx(
     uint16_t dwLngBufRecv = 0;
 
     if ((pBufSend == NULL && dwLngBufSend != 0) || pdwLngBufRecv == NULL) {
-        perror("TrAPI_TransmitEx failed: wrong args");
+        LOG_ERROR("TrAPI_TransmitEx failed: wrong args");
 
         return (IO_ERROR__INVALID_ARG);
     }
@@ -99,7 +99,7 @@ TrAPI_TransmitEx(
             break;
         dwRet = TrAPI_SendFrame(phDev, hdrData, sizeof(TRANSPORT_PACKET_HEADER), pBufSend, dwLngBufSend);
         if (dwRet == IO_ERROR__INVALID_ARG || dwRet == IO_ERROR__NO_MEMORY) {
-            perror("TrAPI_SendFrame failed: ");
+            LOG_ERROR("TrAPI_SendFrame failed: %d", dwRet);
 
             break;
         }
@@ -123,12 +123,15 @@ TrAPI_TransmitEx(
             break;
         }
         if (dwRet == IO_ERROR__INVALID_ARG || dwRet == IO_ERROR__NO_MEMORY) {
-            perror("TrAPI_RecvFrame failed: ");
+            LOG_ERROR("TrAPI_RecvFrame failed: %d", dwRet);
 
             break;
         }
         if (dwRet == IO_ERROR__OK)
             break;
+    }
+    if (dwRet != IO_ERROR__OK) {
+        LOG_ERROR("%d", dwRet);
     }
     *pdwLngBufRecv = dwLngBufRecv;
     return (dwRet);
@@ -144,6 +147,7 @@ TrAPI_Transmit(
     uint16_t dwLngBufSend,
     uint8_t *pBufRecv,
     uint16_t *pdwLngBufRecv) {
+    LOG_INFO("Device: %p", phDev);
     return (TrAPI_TransmitEx(phDev, TRANSPORT_CMD__TRANSMIT, pBufSend, dwLngBufSend, pBufRecv, pdwLngBufRecv));
 }
 
@@ -153,6 +157,7 @@ TrAPI_Transmit(
 io_status_t
 TrAPI_Synchronise(
     PDEVICE_HANDLE phDev) {
+    LOG_DEBUG("Device: %p", phDev);
     uint16_t dwLngBufRecv = 0;
 
     return (TrAPI_TransmitEx(phDev, TRANSPORT_CMD__SYNCHRONISE, NULL, 0, NULL, &dwLngBufRecv));
@@ -164,19 +169,20 @@ TrAPI_Synchronise(
 io_status_t
 TrAPI_Reset(
     PDEVICE_HANDLE phDev) {
+    LOG_INFO("Device: %p", phDev);
     uint16_t dwLngBufRecv = 0;
     io_status_t ret;
 
     ret = TrAPI_TransmitEx(phDev, TRANSPORT_CMD__RESET, NULL, 0, NULL, &dwLngBufRecv);
     if (ret != IO_ERROR__OK) {
-        perror("TrAPI_TransmitEx failed during TRANSPORT_CMD__RESET: ");
+        LOG_ERROR("TrAPI_TransmitEx failed during TRANSPORT_CMD__RESET: %d", ret);
 
         return ret;
     }
 
     ret = TrAPI_Synchronise(phDev);
     if (ret != IO_ERROR__OK) {
-        perror("TrAPI_Synchronise failed after TRANSPORT_CMD__RESET: ");
+        LOG_ERROR("TrAPI_Synchronise failed after TRANSPORT_CMD__RESET: %d", ret);
     }
 
     return ret;
