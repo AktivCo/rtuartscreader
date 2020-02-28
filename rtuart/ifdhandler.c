@@ -5,10 +5,15 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "log.h"
 #include "reader.h"
 #include "reader_list.h"
 
 RESPONSECODE IFDHCreateChannelByName(DWORD Lun, LPSTR DeviceName) {
+    init_log();
+
+    LOG_INFO("Lun: %lu, DeviceName: %s", Lun, DeviceName);
+
     Reader* reader = NULL;
 
     reader = reader_list_get_reader(Lun);

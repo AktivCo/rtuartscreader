@@ -4,7 +4,7 @@ file(GLOB SOURCES "*.[hc]")
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME} pcsc-headers TransportAPI)
+target_link_libraries(${PROJECT_NAME} pcsc-headers TransportAPI dl log)
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 

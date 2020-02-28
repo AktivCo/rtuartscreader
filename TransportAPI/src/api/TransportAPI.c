@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <log/log.h>
+
 #include "com.h"
 #include "transport.h"
 #include "utils.h"

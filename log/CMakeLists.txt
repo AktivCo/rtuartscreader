@@ -1,0 +1,15 @@
+project(log)
+
+set(LOG_PUBLIC_HEADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+file(GLOB SOURCES "*.[hc]")
+
+file(GLOB_RECURSE PUBLIC_HEADERS "${LOG_PUBLIC_HEADERS_DIR}/*.h")
+
+add_library(${PROJECT_NAME} STATIC ${PUBLIC_HEADERS} ${SOURCES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${LOG_PUBLIC_HEADERS_DIR})
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra)
