@@ -13,8 +13,6 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} pcsc-headers TransportAPI)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BUILD_DIR}/${PROJECT_NAME})
-
 if (NOT DEFINED TRANSPORT_TEST_INSTALL_PATH)
     set(TRANSPORT_TEST_INSTALL_PATH "/usr/bin")
 endif()
