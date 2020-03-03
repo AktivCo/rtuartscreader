@@ -8,19 +8,14 @@
 
 uint32_t
 TrAPI_ComputeCRC(
-    const PTRANSPORT_PACKET_HEADER pHdr,
+    PCTRANSPORT_PACKET_HEADER pHdr,
     const uint8_t *aBuf,
     uint32_t dwLng) {
     uint32_t dwCRC = 0;
     uint8_t hdrData[sizeof(TRANSPORT_PACKET_HEADER)];
-    uint32_t dwCRC_backup;
 
-    dwCRC_backup = pHdr->dwDataCrc32;
-
-    pHdr->dwDataCrc32 = 0;
-    pack_header(pHdr, hdrData);
+    pack_header_null_crc(pHdr, hdrData);
     dwCRC = ComputeCRC32(0, hdrData, pHdr->bHdrSize);
-    pHdr->dwDataCrc32 = dwCRC_backup;
 
     if (aBuf != NULL && dwLng != 0)
         dwCRC = ComputeCRC32(dwCRC, aBuf, dwLng);

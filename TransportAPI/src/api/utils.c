@@ -1,11 +1,13 @@
 #include "utils.h"
 
+#include <string.h>
+
 #define LOBYTE(w) ((uint8_t)(w))
 #define HIBYTE(w) ((uint8_t)(((uint16_t)(w) >> 8) & 0xFF))
 #define LOWORD(w) ((uint16_t)(w))
 #define HIWORD(w) ((uint16_t)(((uint32_t)(w) >> 16) & 0xFFFF))
 
-void pack_header(const PTRANSPORT_PACKET_HEADER pHdr, uint8_t *hdrData) {
+void pack_header(PCTRANSPORT_PACKET_HEADER pHdr, uint8_t *hdrData) {
     hdrData[0] = pHdr->bHdrSize;
     hdrData[1] = pHdr->bHdrVers;
     hdrData[2] = pHdr->bProtocolVers;
@@ -36,4 +38,10 @@ void unpack_header(PTRANSPORT_PACKET_HEADER pHdr, const uint8_t *hdrData) {
     pHdr->abRes[0] = hdrData[13];
     pHdr->abRes[1] = hdrData[14];
     pHdr->abRes[2] = hdrData[15];
+}
+
+void pack_header_null_crc(PCTRANSPORT_PACKET_HEADER pHdr, uint8_t *hdrData) {
+    pack_header(pHdr, hdrData);
+
+    memset(hdrData + 4, 0, 4);
 }

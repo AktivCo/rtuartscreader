@@ -34,6 +34,8 @@ typedef struct {
     uint8_t abRes[3];
 } TRANSPORT_PACKET_HEADER, *PTRANSPORT_PACKET_HEADER;
 
+typedef const TRANSPORT_PACKET_HEADER *PCTRANSPORT_PACKET_HEADER;
+
 #define TRANSPORT_PACKET_HEADER_VER1 TRANSPORT_PACKET_HEADER
 
 // Common functions
@@ -50,7 +52,7 @@ void TrAPI_PacketNumInc(
 
 uint32_t
 TrAPI_ComputeCRC(
-    const PTRANSPORT_PACKET_HEADER aHdr,
+    PCTRANSPORT_PACKET_HEADER aHdr,
     const uint8_t *aBuf,
     uint32_t dwLng);
 
