@@ -19,14 +19,11 @@ static uint32_t TrAPI_Test_GetRandom(uint32_t Exclude, uint32_t SizeType);
 * @param
 * @return
 *************************************************************************/
-template<bool U>
-using bool_constant = std::integral_constant<bool, U>;
+template<typename T>
+using EnableIfIntegral = typename std::enable_if<std::is_integral<T>::value, T>::type *;
 
 template<typename T>
-static T TrAPI_Test_GetRandom(std::vector<T> &Exclude, bool_constant<false>);
-
-template<typename T>
-static T TrAPI_Test_GetRandom(std::vector<T> &Exclude, bool_constant<true>) {
+static T TrAPI_Test_GetRandom(std::vector<T> &Exclude, EnableIfIntegral<T> = 0) {
     std::random_device rd;
     std::mt19937_64 gen(rd());
     T Gen;
@@ -35,11 +32,6 @@ static T TrAPI_Test_GetRandom(std::vector<T> &Exclude, bool_constant<true>) {
         Gen = dis(gen);
     } while (std::find(Exclude.begin(), Exclude.end(), Gen) != Exclude.end());
     return Gen;
-}
-
-template<typename T>
-static T TrAPI_Test_GetRandom(std::vector<T> &Exclude) {
-    return TrAPI_Test_GetRandom(Exclude, bool_constant<std::is_integral<T>::value>());
 }
 
 /*!************************************************************************
