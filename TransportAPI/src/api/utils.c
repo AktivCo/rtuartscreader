@@ -20,7 +20,7 @@ void pack_header(PCTRANSPORT_PACKET_HEADER pHdr, uint8_t *hdrData) {
     hdrData[9] = HIBYTE(pHdr->wPacketNum);
     hdrData[10] = LOBYTE(pHdr->wSize);
     hdrData[11] = HIBYTE(pHdr->wSize);
-    hdrData[12] = LOBYTE(pHdr->bRet);
+    hdrData[12] = pHdr->bRet;
     hdrData[13] = pHdr->abRes[0];
     hdrData[14] = pHdr->abRes[1];
     hdrData[15] = pHdr->abRes[2];
@@ -31,9 +31,10 @@ void unpack_header(PTRANSPORT_PACKET_HEADER pHdr, const uint8_t *hdrData) {
     pHdr->bHdrVers = hdrData[1];
     pHdr->bProtocolVers = hdrData[2];
     pHdr->bPID = hdrData[3];
-    pHdr->dwDataCrc32 = *((uint32_t *)(hdrData + 4));
-    pHdr->wPacketNum = *((uint16_t *)(hdrData + 8));
-    pHdr->wSize = *((uint16_t *)(hdrData + 10));
+    pHdr->dwDataCrc32 = (uint32_t)(hdrData[4]) + ((uint32_t)(hdrData[5]) << 8) +
+                        ((uint32_t)(hdrData[6]) << 16) + ((uint32_t)(hdrData[7]) << 24);
+    pHdr->wPacketNum = (uint16_t)(hdrData[8]) + ((uint16_t)(hdrData[9]) << 8);
+    pHdr->wSize = (uint16_t)(hdrData[10]) + ((uint16_t)(hdrData[11]) << 8);
     pHdr->bRet = hdrData[12];
     pHdr->abRes[0] = hdrData[13];
     pHdr->abRes[1] = hdrData[14];
