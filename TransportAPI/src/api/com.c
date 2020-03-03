@@ -11,6 +11,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "transport.h"
+
 io_status_t com_init(HANDLE *hcom, const char *com_name, uint32_t baudrate) {
     struct termios options = { 0 };
     HANDLE h;
@@ -51,9 +53,9 @@ io_status_t com_init(HANDLE *hcom, const char *com_name, uint32_t baudrate) {
     //set only 1 stop bit
     options.c_cflag &= ~CSTOPB;
 
-    //set 1ms timeout for each symbol
+    //set 100 ms timeout for each symbol
     options.c_cc[VMIN] = 0;
-    options.c_cc[VTIME] = 1;
+    options.c_cc[VTIME] = IO_TIME_READ_BLOCKS / 100; //VTIME is in tenth of second
 
     //apply new port settings
     ret = tcsetattr(h, TCSANOW, &options);

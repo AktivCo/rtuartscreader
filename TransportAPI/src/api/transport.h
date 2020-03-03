@@ -15,7 +15,8 @@ extern "C" {
 #define FRAME_LNG_SYMBOL_END 1
 
 #define IO_TRY_NUM 3
-#define IO_WAIT_TIME_PACKETS 1000
+#define IO_WAIT_TIME_PACKETS 300
+#define IO_TIME_READ_BLOCKS 100
 
 // Exchange protocol version
 #define TRASPORT_PROTOCOL_VERS 1

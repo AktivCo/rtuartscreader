@@ -38,7 +38,7 @@ io_status_t TrAPI_RecvByte(PDEVICE_HANDLE phDev, uint8_t *pbCh) {
 
         if (!dwRealSize) {
             dwTimeout++;
-            if ((dwTimeout * 50) > IO_WAIT_TIME_PACKETS)
+            if ((dwTimeout * IO_TIME_READ_BLOCKS) > IO_WAIT_TIME_PACKETS)
                 return IO_ERROR__TIMEOUT;
         } else
             break;
