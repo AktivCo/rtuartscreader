@@ -2,7 +2,7 @@
 
 ## Description
 
-Rtuart is an implementation of user-space driver ([IFD Handler](https://pcsclite.apdu.fr/api/group__IFDHandler.html#details))
+**Rtuart** is an implementation of user-space driver ([IFD Handler](https://pcsclite.apdu.fr/api/group__IFDHandler.html#details))
 for [pcsc-lite](https://pcsclite.apdu.fr/) to provide access via PCSC interface to
 [Rutoken 4010](https://www.rutoken.ru/products/all/rutoken-m2m/#models) connected over serial interface.
 
