@@ -173,23 +173,24 @@ RESPONSECODE IFDHPowerICC(DWORD Lun, DWORD Action, PUCHAR Atr, PDWORD AtrLength)
 
     reader_status_t r;
 
+    const UCHAR* atr;
+    DWORD atrLen;
+
     switch (Action) {
     case IFD_POWER_UP:
-    case IFD_RESET: {
-        r = reader_power_on(reader);
+        r = reader_power_on(reader, &atr, &atrLen);
         if (r != reader_status_ok) {
             LOG_ERROR_RETURN_IFD(IFD_COMMUNICATION_ERROR, "reader_power_on failed: %d", r);
         }
 
-        const UCHAR* atr;
-        DWORD atrLen;
-        r = reader_get_atr(reader, &atr, &atrLen);
+        return GetCapability(atrLen, atr, AtrLength, Atr);
+    case IFD_RESET:
+        r = reader_reset(reader, &atr, &atrLen);
         if (r != reader_status_ok) {
             LOG_ERROR_RETURN_IFD(IFD_COMMUNICATION_ERROR, "reader_get_atr failed: %d", r);
         }
 
         return GetCapability(atrLen, atr, AtrLength, Atr);
-    }
     case IFD_POWER_DOWN:
         r = reader_power_off(reader);
         if (r != reader_status_ok) {

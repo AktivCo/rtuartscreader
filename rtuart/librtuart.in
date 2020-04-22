@@ -1,3 +1,0 @@
-DEVICENAME        @RTUART_SERIAL_PORT@
-FRIENDLYNAME      "Aktiv Rutoken ECP B"
-LIBPATH           /usr/lib/pcsc/drivers/serial/librtuart.so

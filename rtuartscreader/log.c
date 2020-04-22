@@ -40,7 +40,7 @@ void init_log() {
         return; // sorry, no log
     }
 
-    char* logLevelString = getenv("LIBRTUART_ifdLogLevel");
+    char* logLevelString = getenv("LIBRTUARTSCREADER_ifdLogLevel");
     if (logLevelString) {
         char* endPtr;
         unsigned long logLevelLong = strtoul(logLevelString, &endPtr, 0);

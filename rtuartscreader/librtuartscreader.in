@@ -1,0 +1,3 @@
+DEVICENAME        @RTUARTSCREADER_SERIAL_PORT@
+FRIENDLYNAME      "Aktiv Rutoken UART SC Reader"
+LIBPATH           /usr/lib/pcsc/drivers/serial/librtuartscreader.so

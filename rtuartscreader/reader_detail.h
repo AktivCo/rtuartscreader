@@ -5,18 +5,16 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <PCSC/ifdhandler.h>
 
-#include <TransportAPI/types.h>
+typedef enum reader_power_state_enum {
+    POWERED_OFF = 0,
+    POWERED_ON
+} POWER_STATE;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-io_status_t com_init(HANDLE *hcom, const char *com_name, uint32_t baudrate);
-
-io_status_t com_deinit(HANDLE hcom);
-
-#ifdef __cplusplus
-}
-#endif
+typedef struct reader_st {
+    POWER_STATE power;
+    int handle;
+    UCHAR atr[MAX_ATR_SIZE];
+    DWORD atrLength;
+} Reader;

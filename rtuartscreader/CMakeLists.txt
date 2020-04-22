@@ -1,0 +1,28 @@
+project(rtuartscreader)
+
+set (RTUARTSCREADER_VERSION_MAJOR 1)
+set (RTUARTSCREADER_VERSION_MINOR 0)
+set (RTUARTSCREADER_VERSION_PATCH 0)
+set (RTUARTSCREADER_VERSION_STRING ${RTUARTSCREADER_VERSION_MAJOR}.${RTUARTSCREADER_VERSION_MINOR}.${RTUARTSCREADER_VERSION_PATCH})
+
+file(GLOB SOURCES "*.[hc]")
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+
+target_link_libraries(${PROJECT_NAME} pcsc-headers dl log)
+
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra -Wno-unused-parameter)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${RTUARTSCREADER_VERSION_STRING} SOVERSION ${RTUARTSCREADER_VERSION_MAJOR})
+
+if(NOT DEFINED RTUARTSCREADER_SERIAL_PORT)
+	set(RTUARTSCREADER_SERIAL_PORT "/dev/ttyS0")
+endif()
+
+configure_file(librtuartscreader.in "${CMAKE_CURRENT_BINARY_DIR}/librtuartscreader" NEWLINE_STYLE UNIX)
+
+install(TARGETS ${PROJECT_NAME} DESTINATION "/usr/lib/pcsc/drivers/serial")
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/librtuartscreader" DESTINATION "/etc/reader.conf.d/")
