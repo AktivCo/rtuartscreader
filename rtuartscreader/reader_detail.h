@@ -7,6 +7,8 @@
 
 #include <PCSC/ifdhandler.h>
 
+#include "transport.h"
+
 typedef enum reader_power_state_enum {
     POWERED_OFF = 0,
     POWERED_ON
@@ -14,7 +16,7 @@ typedef enum reader_power_state_enum {
 
 typedef struct reader_st {
     POWER_STATE power;
-    int handle;
     UCHAR atr[MAX_ATR_SIZE];
     DWORD atrLength;
+    transport_t transport;
 } Reader;

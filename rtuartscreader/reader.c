@@ -8,12 +8,12 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "apdu_t0.h"
 #include "reader_detail.h"
 
 // TODO: remove me
 static const uint8_t kFakeAtr[] = { 0x3B, 0x1A, 0x96, 0x72, 0x75, 0x74, 0x6F, 0x6B, 0x65, 0x6E, 0x6D, 0x73, 0x63 };
 static const size_t kFakeAtrLen = sizeof(kFakeAtr);
-
 
 reader_status_t reader_open(Reader* reader, const char* readerName) {
     reader_status_t r = reader_status_ok;
@@ -91,7 +91,7 @@ reader_status_t reader_power_on(Reader* reader, UCHAR const** atr, DWORD* length
 
 reader_status_t reader_reset_impl(Reader* reader) {
     // TODO: reset reader and fill reader->atr and reader->atrLength
-    // TODO: return IFD_COMMUNICATION_ERROR if reset is failed due to unresponsive/absent card 
+    // TODO: return IFD_COMMUNICATION_ERROR if reset is failed due to unresponsive/absent card
     // TODO: set reader->atrLength to 0 and return IFD_ERROR_POWER_ACTION if reset is failed for other reasons
 
     // TODO: remove me
@@ -123,20 +123,8 @@ reader_status_t reader_reset(Reader* reader, UCHAR const** atr, DWORD* length) {
     return reader_get_atr(reader, atr, length);
 }
 
-reader_status_t reader_transmit_apdu(Reader* reader, const uint8_t* tx_buf, uint16_t tx_len, uint8_t* rx_buf, uint16_t* rx_len) {
-    // TODO
-
-    // TODO: remove me
-    uint8_t response[] = { 0x90, 0x00 };
-    *rx_len = sizeof(response);
-    memcpy(rx_buf, response, *rx_len);
-
-    return reader_status_ok;
-}
-
-
 reader_status_t reader_transmit(Reader* reader, UCHAR const* txBuffer, DWORD txLength, UCHAR* rxBuffer, PDWORD rxLength) {
-    reader_status_t r = reader_status_ok;
+    transmit_status_t r = transmit_status_ok;
 
     if (reader->power != POWERED_ON) {
         return reader_status_reader_unpowered;
@@ -161,11 +149,23 @@ reader_status_t reader_transmit(Reader* reader, UCHAR const* txBuffer, DWORD txL
     else
         recvLength = *rxLength;
 
-    r = reader_transmit_apdu(reader, txBuffer, sendLength, rxBuffer, &recvLength);
+    r = t0_transmit_apdu(&reader->transport, txBuffer, sendLength, rxBuffer, &recvLength);
 
-    *rxLength = recvLength;
+    if (r == transmit_status_ok)
+        *rxLength = recvLength;
+    else
+        *rxLength = 0;
 
-    return r;
+    // TODO: figure out whether to reset the card in case of communication error
+    if (r == transmit_status_communication_error) {
+        return reader_status_communication_error;
+    } else if (r == transmit_status_insufficient_buffer) {
+        return reader_status_memory_error;
+    } else if (r != transmit_status_ok) {
+        return reader_status_internal_error;
+    }
+
+    return reader_status_ok;
 }
 
 reader_status_t reader_is_present(Reader* reader) {
