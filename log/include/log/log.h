@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+#include <string.h>
+
 typedef enum {
     LOG_LEVEL_NONE = 0,
     LOG_LEVEL_CRITICAL = 0x01,
@@ -29,11 +31,17 @@ typedef enum {
 #define LOG_DEBUG(format, ...) \
     DO_LOG_MESSAGE(LOG_LEVEL_DEBUG, format, __VA_ARGS__)
 
+#define LOG_XXD_INFO(data, data_size, format, ...) \
+    DO_LOG_XXD_MESSAGE(LOG_LEVEL_INFO, data, data_size, format, __VA_ARGS__)
+
 // This is gcc magic, probably won't work with other compilers
 #define VA_ARGS(...) , ##__VA_ARGS__
 
 #define DO_LOG_MESSAGE(logLevel, format, ...) \
     DO_LOG_MESSAGE_IMPL(logLevel, "%s:%d:%s() " format, __FILE__, __LINE__, __FUNCTION__ VA_ARGS(__VA_ARGS__))
+
+#define DO_LOG_XXD_MESSAGE(logLevel, data, data_size, format, ...) \
+    DO_LOG_XXD_MESSAGE_IMPL(logLevel, data, data_size, "%s:%d:%s() " format, __FILE__, __LINE__, __FUNCTION__ VA_ARGS(__VA_ARGS__))
 
 typedef void (*log_msg_function)(const int priority, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 
