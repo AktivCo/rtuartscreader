@@ -10,25 +10,27 @@
 
 #include "apdu_t0.h"
 #include "reader_detail.h"
+#include "transport.h"
+
 
 // TODO: remove me
 static const uint8_t kFakeAtr[] = { 0x3B, 0x1A, 0x96, 0x72, 0x75, 0x74, 0x6F, 0x6B, 0x65, 0x6E, 0x6D, 0x73, 0x63 };
 static const size_t kFakeAtrLen = sizeof(kFakeAtr);
 
 reader_status_t reader_open(Reader* reader, const char* readerName) {
-    reader_status_t r = reader_status_ok;
+    transport_status_t r = transport_initialize(&reader->transport, readerName);
+    if (r)
+        return reader_status_internal_error;
 
-    // TODO: initialize interaction with reader
-
-    return r;
+    return reader_status_ok;
 }
 
 reader_status_t reader_close(Reader* reader) {
-    reader_status_t r = reader_status_ok;
+    transport_status_t r = transport_deinitialize(&reader->transport);
+    if (r)
+        return reader_status_internal_error;
 
-    // TODO: deinitialize interaction with reader
-
-    return r;
+    return reader_status_ok;
 }
 
 reader_status_t reader_get_atr(Reader const* reader, UCHAR const** atr, DWORD* length) {

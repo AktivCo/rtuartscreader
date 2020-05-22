@@ -9,7 +9,7 @@ file(GLOB_RECURSE SOURCES "*.[hc]")
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME} pcsc-headers dl log)
+target_link_libraries(${PROJECT_NAME} pcsc-headers dl log pigpio)
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
