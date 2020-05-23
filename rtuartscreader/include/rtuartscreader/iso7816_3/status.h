@@ -8,3 +8,5 @@ typedef enum {
     iso7816_3_status_unexpected_card_response,
     iso7816_3_status_pps_exchange_failed
 } iso7816_3_status_t;
+
+const char* iso7816_3_status_to_string(iso7816_3_status_t status);

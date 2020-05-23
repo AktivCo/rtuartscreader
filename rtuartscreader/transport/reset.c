@@ -117,7 +117,8 @@ static transport_status_t compute_wt_ds(const atr_info_t* atr_info, uint32_t fre
     if (wt_ds_claimed > 255) {
         // TODO: log the problem
         // TODO: support insanely long wait time
-        return transport_status_mode_not_supported;
+        LOG_RETURN_TRANSPORT_ERROR_MSG(transport_status_mode_not_supported,
+                                       "Card transmission parameters (too long WT) is not supported");
     }
 
     *wt_ds = (uint8_t)(ceil(wt_ds_claimed));
@@ -133,7 +134,8 @@ static transport_status_t transmit_params_init(const f_d_index_t* f_d_index, con
     params->etu = f / d;
 
     if (!transmit_speed_from_f_d_indices(f_d_index, &params->transmit_speed)) {
-        return transport_status_mode_not_supported;
+        LOG_RETURN_TRANSPORT_ERROR_MSG(transport_status_mode_not_supported,
+                                       "Card transmission parameters (F, D) are not supported");
     };
 
     iso7816_3_status_t iso_r = compute_extra_gt(f, d, atr_info, params->transmit_speed.freq, &params->extra_gt_us);
@@ -189,15 +191,15 @@ static transport_status_t do_transport_reset(transport_t* transport, uint8_t atr
     if (info.ta2.is_present) {
         if (info.ta2.enforced_protocol != PROTOCOL_T0) {
             if (info.ta2.can_change_mode) {
-                return transport_status_need_reset;
+                LOG_RETURN_TRANSPORT_ERROR_MSG(transport_status_need_reset, "T0 only is supported, may try again");
             } else {
-                return transport_status_mode_not_supported;
+                LOG_RETURN_TRANSPORT_ERROR_MSG(transport_status_mode_not_supported, "T0 only is supported");
             }
         }
     } else {
         if (is_explicit_protocol_defined(info.explicit_protocols, ARRAYSIZE(info.explicit_protocols)) //
             && !info.explicit_protocols[PROTOCOL_T0]) {
-            return transport_status_mode_not_supported;
+            LOG_RETURN_TRANSPORT_ERROR_MSG(transport_status_mode_not_supported, "T0 only is supported");
         }
     }
 
@@ -205,7 +207,8 @@ static transport_status_t do_transport_reset(transport_t* transport, uint8_t atr
     f_d_index_t f_d_index = f_d_index_default;
 
     if (info.ta1.is_present && !choose_best_f_d_indices(&info.ta1.f_d, &f_d_index)) {
-        return transport_status_mode_not_supported;
+        LOG_RETURN_TRANSPORT_ERROR_MSG(transport_status_mode_not_supported,
+                                       "Card transmission parameters (F, D) are not supported");
     }
 
     // Assert F & D are OK

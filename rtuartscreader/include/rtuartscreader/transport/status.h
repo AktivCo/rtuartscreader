@@ -11,3 +11,5 @@ typedef enum {
     transport_status_mode_not_supported,
     transport_status_need_reset
 } transport_status_t;
+
+const char* transport_status_to_string(transport_status_t status);

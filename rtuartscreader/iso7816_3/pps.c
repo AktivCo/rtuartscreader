@@ -113,7 +113,7 @@ static iso7816_3_status_t read_pps_response(const transport_t* transport, pps_t*
     pps->pps[i++] = ppss;
 
     if (ppss != 0xFF)
-        return iso7816_3_status_unexpected_card_response;
+        LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_unexpected_card_response, "Bad PPSS");
 
     uint8_t pps0;
     r = transport_recv_byte(transport, &pps0);
@@ -160,7 +160,7 @@ static iso7816_3_status_t read_pps_response(const transport_t* transport, pps_t*
         convolution ^= pps->pps[i];
     }
     if (convolution != 0)
-        return iso7816_3_status_unexpected_card_response;
+        LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_unexpected_card_response, "Incorrect PCK");
 
     return iso7816_3_status_ok;
 }
@@ -230,7 +230,7 @@ iso7816_3_status_t do_pps_exchange(const transport_t* transport, const f_d_index
         return atr_r;
 
     if (!is_pps_exchange_success(&pps_request, &pps_response)) {
-        return iso7816_3_status_pps_exchange_failed;
+        LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
     }
 
     return iso7816_3_status_ok;

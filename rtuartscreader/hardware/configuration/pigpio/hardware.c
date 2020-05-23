@@ -2,18 +2,23 @@
 
 #include <pigpio/pigpio.h>
 
+#include <rtuartscreader/log/log.h>
+
 #define PIN_PWM0 18
 
 #define PIN_SC_RST 17
 
 #define DUTY_CYCLE_50_PERCENT 500000
 
-#define RETURN_ON_PIGPIO_ERROR(r)    \
-    do {                             \
-        if (r != 0) {                \
-            return hw_status_failed; \
-        }                            \
+#define RETURN_ON_PIGPIO_CUSTOM_ERROR(r, expected)                                          \
+    do {                                                                                    \
+        if (r != expected) {                                                                \
+            DO_LOG_MESSAGE(LOG_LEVEL_ERROR, "PIGPIO ERROR: %x (%x expected)", r, expected); \
+            return hw_status_failed;                                                        \
+        }                                                                                   \
     } while (0)
+
+#define RETURN_ON_PIGPIO_ERROR(r) RETURN_ON_PIGPIO_CUSTOM_ERROR(r, 0)
 
 hw_status_t hw_initialize_impl() {
     const uint32_t gpioCfgInternals = PI_CFG_NOSIGHANDLER;
@@ -24,9 +29,7 @@ hw_status_t hw_initialize_impl() {
     RETURN_ON_PIGPIO_ERROR(r);
 
     r = gpioInitialise();
-    if (r != PIGPIO_VERSION) {
-        return hw_status_failed;
-    }
+    RETURN_ON_PIGPIO_CUSTOM_ERROR(r, PIGPIO_VERSION);
 
     return hw_status_ok;
 }

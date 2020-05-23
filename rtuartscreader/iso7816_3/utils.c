@@ -2,6 +2,8 @@
 
 #include <math.h>
 
+#include <rtuartscreader/iso7816_3/detail/error.h>
+
 const f_freq_max_t* f_freq_max_by_index(uint8_t index) {
     static const f_freq_max_t f_freq_max_table[16] = {
         { 372, 4000000 },
@@ -56,7 +58,8 @@ iso7816_3_status_t compute_extra_gt(uint32_t f, uint32_t d, const atr_info_t* at
         uint32_t fi, di;
         get_fi_di(atr_info, &fi, &di);
         if (fi == IS0_7816_3_RFU || di == IS0_7816_3_RFU) {
-            return iso7816_3_status_invalid_params;
+            LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_invalid_params,
+                                           "Card transmission parameters (F, D) are invalid");
         }
 
         r = ((double)fi) / di;
@@ -72,7 +75,8 @@ iso7816_3_status_t compute_wt(const atr_info_t* atr_info, uint32_t freq, double*
     uint32_t fi, di;
     get_fi_di(atr_info, &fi, &di);
     if (fi == IS0_7816_3_RFU) {
-        return iso7816_3_status_invalid_params;
+        LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_invalid_params,
+                                       "Card transmission parameters (F, D) are invalid");
     }
 
     double wi = 10;

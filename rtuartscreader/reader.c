@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <log/log.h>
+
 #include <rtuartscreader/iso7816_3/apdu_t0.h>
 #include <rtuartscreader/reader_detail.h>
 #include <rtuartscreader/transport/initialize.h>

@@ -6,6 +6,7 @@
 
 #include <rtuartscreader/iso7816_3/detail/error.h>
 #include <rtuartscreader/iso7816_3/detail/utils.h>
+#include <rtuartscreader/log/log.h>
 #include <rtuartscreader/transport/sendrecv.h>
 #include <rtuartscreader/utils/common.h>
 
@@ -18,7 +19,7 @@
     do {                                           \
         counter += n;                              \
         if (counter >= limit) {                    \
-            return error;                          \
+            LOG_RETURN_ISO7816_3_ERROR(error);     \
         }                                          \
     } while (0)
 
@@ -80,7 +81,8 @@ iso7816_3_status_t read_atr(const transport_t* transport, atr_t* atr) {
     atr->atr[i] = ts;
 
     if (ts != 0x3B)
-        return iso7816_3_status_unexpected_card_response;
+        LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_unexpected_card_response,
+                                       "Inverse convention is not supported");
 
     uint8_t t0;
     r = transport_recv_byte(transport, &t0);
@@ -157,7 +159,7 @@ iso7816_3_status_t read_atr(const transport_t* transport, atr_t* atr) {
         atr->atr_len = i + 1;
 
         if (!is_tck_correct(atr->atr, atr->atr_len))
-            return iso7816_3_status_unexpected_card_response;
+            LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_unexpected_card_response, "Incorrect TCK");
     } else {
         atr->atr_len = i + 1;
     }

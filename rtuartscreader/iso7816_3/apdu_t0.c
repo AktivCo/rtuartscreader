@@ -1,6 +1,7 @@
 #include <rtuartscreader/iso7816_3/apdu_t0.h>
 
 #include <rtuartscreader/iso7816_3/detail/error.h>
+#include <rtuartscreader/log/log.h>
 #include <rtuartscreader/transport/sendrecv.h>
 #include <rtuartscreader/transport/transport_t.h>
 #include <rtuartscreader/utils/buffer_view.h>
@@ -14,7 +15,6 @@
 
 #define PROCEDURE_BYTE_NULL 0x60
 
-
 static inline uint16_t le_to_ne(uint8_t le) {
     if (le == 0x00) return APDU_MAX_NE_VALUE;
     return le;
@@ -24,15 +24,13 @@ static transport_status_t send_apdu_header(const transport_t* transport, const u
     transport_status_t r;
 
     r = transport_send_bytes(transport, tx_buf, APDU_HEADER_SIZE - 1);
-    if (r != transport_status_ok) {
-        return r;
-    }
+    POPULATE_ERROR(r, transport_status_ok, r);
 
     return transport_send_byte(transport, p3);
 }
 
-static iso7816_3_status_t t0_transmit_data(const transport_t* transport, const uint8_t ack, pop_front_buffer_view* send_data,
-                                           push_back_buffer_view* recv_data) {
+static iso7816_3_status_t t0_transceive_data(const transport_t* transport, const uint8_t ack, pop_front_buffer_view* send_data,
+                                             push_back_buffer_view* recv_data) {
     const uint8_t inv_ack = ~ack;
 
     while (1) {
@@ -48,12 +46,14 @@ static iso7816_3_status_t t0_transmit_data(const transport_t* transport, const u
         // SW1 byte, recieve SW2 and quit
         if ((proc_byte & 0xf0) == 0x60 || (proc_byte & 0xf0) == 0x90) {
             if (push_back_buffer_view_full(recv_data)) {
-                return iso7816_3_status_unexpected_card_response;
+                LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_unexpected_card_response,
+                                               "The card sent more data than expected");
             }
             push_back_buffer_view_push(recv_data, proc_byte);
 
             if (push_back_buffer_view_full(recv_data)) {
-                return iso7816_3_status_unexpected_card_response;
+                LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_unexpected_card_response,
+                                               "The card sent more data than expected");
             }
 
             r = transport_recv_byte(transport, push_back_buffer_view_reserve_n(recv_data, 1));
@@ -72,7 +72,8 @@ static iso7816_3_status_t t0_transmit_data(const transport_t* transport, const u
             } else {
                 size_t free_space = push_back_buffer_view_free_space(recv_data);
                 if (free_space <= 2) {
-                    return iso7816_3_status_unexpected_card_response;
+                    LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_unexpected_card_response,
+                                                   "The card sent more data than expected");
                 }
 
                 uint8_t* data = push_back_buffer_view_reserve_n(recv_data, free_space - 2);
@@ -91,7 +92,8 @@ static iso7816_3_status_t t0_transmit_data(const transport_t* transport, const u
             } else {
                 size_t free_space = push_back_buffer_view_free_space(recv_data);
                 if (free_space <= 2) {
-                    return iso7816_3_status_unexpected_card_response;
+                    LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_unexpected_card_response,
+                                                   "The card sent more data than expected");
                 }
 
                 r = transport_recv_byte(transport, push_back_buffer_view_reserve_n(recv_data, 1));
@@ -114,7 +116,7 @@ iso7816_3_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t*
     uint8_t p3;
 
     if (tx_len < APDU_HEADER_SIZE - 1) {
-        return iso7816_3_status_invalid_params;
+        LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_invalid_params, "APDU buffer too short");
     } else if (tx_len == APDU_HEADER_SIZE - 1) {
         p3 = 0;
     } else if (tx_len == APDU_HEADER_SIZE) {
@@ -125,18 +127,18 @@ iso7816_3_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t*
         nc = p3;
 
         if (tx_len < APDU_HEADER_SIZE + nc) {
-            return iso7816_3_status_invalid_params;
+            LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_invalid_params, "APDU is not complete");
         } else if (tx_len == nc + APDU_HEADER_SIZE) {
             ne = 0;
         } else if (tx_len == nc + APDU_HEADER_SIZE + 1) {
             ne = le_to_ne(tx_buf[tx_len - 1]);
         } else {
-            return iso7816_3_status_invalid_params;
+            LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_invalid_params, "APDU buffer has excess data");
         }
     }
 
     if (*rx_len < ne + 2) {
-        return iso7816_3_status_insufficient_buffer;
+        LOG_RETURN_ISO7816_3_ERROR_MSG(iso7816_3_status_insufficient_buffer, "Response buffer too short");
     }
 
     r = send_apdu_header(transport, tx_buf, p3);
@@ -150,10 +152,8 @@ iso7816_3_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t*
 
     const uint8_t ack = tx_buf[APDU_INS_OFFSET];
 
-    iso7816_3_status_t transmit_data_result = t0_transmit_data(transport, ack, &send_data, &recv_data);
-    if (transmit_data_result != iso7816_3_status_ok) {
-        return transmit_data_result;
-    }
+    iso7816_3_status_t transceive_data_result = t0_transceive_data(transport, ack, &send_data, &recv_data);
+    POPULATE_ERROR(transceive_data_result, iso7816_3_status_ok, transceive_data_result);
 
     *rx_len = push_back_buffer_view_size(&recv_data);
 

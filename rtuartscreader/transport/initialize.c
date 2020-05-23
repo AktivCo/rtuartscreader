@@ -13,13 +13,13 @@ static transport_status_t transport_setup_serial_settings(const transport_t* tra
     struct termios options = { 0 };
 
     int ret = tcgetattr(transport->handle, &options);
-    RETURN_ON_OS_ERROR(ret);
+    LOG_RETURN_ON_OS_ERROR(ret);
 
     ret = cfsetispeed(&options, transport->params.transmit_speed.baudrate);
-    RETURN_ON_OS_ERROR(ret);
+    LOG_RETURN_ON_OS_ERROR(ret);
 
     ret = cfsetospeed(&options, transport->params.transmit_speed.baudrate);
-    RETURN_ON_OS_ERROR(ret);
+    LOG_RETURN_ON_OS_ERROR(ret);
 
     cfmakeraw(&options);
 
@@ -31,10 +31,10 @@ static transport_status_t transport_setup_serial_settings(const transport_t* tra
     options.c_cc[VTIME] = transport->params.wt_ds;
 
     ret = tcsetattr(transport->handle, TCSANOW, &options);
-    RETURN_ON_OS_ERROR(ret);
+    LOG_RETURN_ON_OS_ERROR(ret);
 
     ret = tcflush(transport->handle, TCIOFLUSH);
-    RETURN_ON_OS_ERROR(ret);
+    LOG_RETURN_ON_OS_ERROR(ret);
 
     return transport_status_ok;
 }
@@ -48,7 +48,8 @@ transport_status_t transport_initialize_impl(transport_t* transport, const char*
 
     transport->handle = open(reader_name, O_RDWR | O_NOCTTY);
     if (transport->handle == -1) {
-        r = transport_status_communication_error;
+        LOG_OS_ERROR(transport->handle);
+        r = transport_status_os_error;
         goto err_label;
     }
 
@@ -83,7 +84,7 @@ deinit_library_label:
     hw_deinitialize();
 close_handle_label:
     os_r = close(transport->handle);
-    RETURN_ON_OS_ERROR(os_r);
+    LOG_RETURN_ON_OS_ERROR(os_r);
 err_label:
     return r;
 }
@@ -92,8 +93,7 @@ transport_status_t transport_reinitialize_impl(transport_t* transport, const tra
     transport->params = *params;
 
     transport_status_t r = transport_setup_serial_settings(transport);
-    if (r != transport_status_ok)
-        return r;
+    POPULATE_ERROR(r, transport_status_ok, r);
 
     hw_status_t hw_r = hw_stop_clock();
     RETURN_ON_HW_ERROR(hw_r);
@@ -114,7 +114,7 @@ transport_status_t transport_deinitialize_impl(const transport_t* transport) {
     hw_deinitialize();
 
     int os_r = close(transport->handle);
-    RETURN_ON_OS_ERROR(os_r);
+    LOG_RETURN_ON_OS_ERROR(os_r);
 
     return transport_status_ok;
 }

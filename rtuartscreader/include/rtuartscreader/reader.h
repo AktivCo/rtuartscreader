@@ -7,8 +7,6 @@
 
 #include <PCSC/ifdhandler.h>
 
-#include "log.h"
-
 typedef struct reader_st Reader;
 
 typedef enum {

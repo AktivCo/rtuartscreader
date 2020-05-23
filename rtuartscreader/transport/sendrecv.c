@@ -3,11 +3,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <rtuartscreader/log.h>
+#include <rtuartscreader/transport/detail/error.h>
 
 // Read timeout is expected to be set based on WT value
 // derived from selected transport parameters during PPS.
-static transport_status_t transport_recv_byte_impl(const transport_t* transport, uint8_t* byte) {
+static transport_status_t do_transport_recv_byte_impl(const transport_t* transport, uint8_t* byte) {
     ssize_t rsize = read(transport->handle, byte, 1);
 
     if (rsize == -1) {
@@ -22,14 +22,14 @@ static transport_status_t transport_recv_byte_impl(const transport_t* transport,
 }
 
 // TODO: support extra guard time
-static transport_status_t transport_send_byte_impl(const transport_t* transport, uint8_t byte) {
+static transport_status_t do_transport_send_byte_impl(const transport_t* transport, uint8_t byte) {
     uint8_t echo;
 
     if (write(transport->handle, &byte, 1) != 1)
         return transport_status_communication_error;
 
     // handle synchronous echo byte
-    return transport_recv_byte(transport, &echo);
+    return do_transport_recv_byte_impl(transport, &echo);
 }
 
 static transport_status_t transport_recv_bytes_impl(const transport_t* transport, uint8_t* buf, size_t len) {
@@ -37,29 +37,39 @@ static transport_status_t transport_recv_bytes_impl(const transport_t* transport
     size_t recv;
 
     for (recv = 0; recv < len; ++recv) {
-        r = transport_recv_byte(transport, &buf[recv]);
+        r = do_transport_recv_byte_impl(transport, &buf[recv]);
         if (r != transport_status_ok) {
-            LOG_ERROR("transport_recv_byte failed: %d", r);
-            break;
+            LOG_RETURN_TRANSPORT_ERROR(r);
+        }
+    }
+
+    LOG_XXD_INFO(buf, len, "recv: ");
+
+    return r;
+}
+
+static transport_status_t transport_send_bytes_impl(const transport_t* transport, const uint8_t* bytes, size_t len) {
+    LOG_XXD_INFO(bytes, len, "send: ");
+
+    transport_status_t r = transport_status_ok;
+    size_t sent;
+
+    for (sent = 0; sent != len; ++sent) {
+        r = do_transport_send_byte_impl(transport, bytes[sent]);
+        if (r != transport_status_ok) {
+            LOG_RETURN_TRANSPORT_ERROR(r);
         }
     }
 
     return r;
 }
 
-static transport_status_t transport_send_bytes_impl(const transport_t* transport, const uint8_t* bytes, size_t len) {
-    transport_status_t r = transport_status_ok;
-    size_t sent;
+static transport_status_t transport_recv_byte_impl(const transport_t* transport, uint8_t* byte) {
+    return transport_recv_bytes_impl(transport, byte, 1);
+}
 
-    for (sent = 0; sent != len; ++sent) {
-        r = transport_send_byte(transport, bytes[sent]);
-        if (r != transport_status_ok) {
-            LOG_ERROR("transport_send_byte failed: %d", r);
-            break;
-        }
-    }
-
-    return r;
+static transport_status_t transport_send_byte_impl(const transport_t* transport, uint8_t byte) {
+    return transport_send_bytes_impl(transport, &byte, 1);
 }
 
 #define PIMPL_NAME_PREFIX transport_sendrecv
