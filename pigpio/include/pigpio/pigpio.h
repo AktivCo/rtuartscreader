@@ -1,403 +1,12 @@
-/*
-This is free and unencumbered software released into the public domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
-
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-For more information, please refer to <http://unlicense.org/>
-*/
-
 #ifndef PIGPIO_H
 #define PIGPIO_H
+
+#define _GNU_SOURCE
 
 #include <stdint.h>
 #include <pthread.h>
 
 #define PIGPIO_VERSION 76
-
-/*TEXT
-
-pigpio is a C library for the Raspberry which allows control of the GPIO.
-
-*Features*
-
-o hardware timed PWM on any of GPIO 0-31
-
-o hardware timed servo pulses on any of GPIO 0-31
-
-o callbacks when any of GPIO 0-31 change state
-
-o callbacks at timed intervals
-
-o reading/writing all of the GPIO in a bank as one operation
-
-o individually setting GPIO modes, reading and writing
-
-o notifications when any of GPIO 0-31 change state
-
-o the construction of output waveforms with microsecond timing
-
-o rudimentary permission control over GPIO
-
-o a simple interface to start and stop new threads
-
-o I2C, SPI, and serial link wrappers
-
-o creating and running scripts
-
-*GPIO*
-
-ALL GPIO are identified by their Broadcom number.
-
-*Credits*
-
-The PWM and servo pulses are timed using the DMA and PWM peripherals.
-
-This use was inspired by Richard Hirst's servoblaster kernel module.
-
-*Usage*
-
-Include <pigpio.h> in your source files.
-
-Assuming your source is in prog.c use the following command to build and
-run the executable.
-
-. .
-gcc -Wall -pthread -o prog prog.c -lpigpio -lrt
-sudo ./prog
-. .
-
-For examples of usage see the C programs within the pigpio archive file.
-
-*Notes*
-
-All the functions which return an int return < 0 on error.
-
-[*gpioInitialise*] must be called before all other library functions
-with the following exceptions:
-
-. .
-[*gpioCfg**]
-[*gpioVersion*]
-[*gpioHardwareRevision*]
-. .
-
-If the library is not initialised all but the [*gpioCfg**],
-[*gpioVersion*], and [*gpioHardwareRevision*] functions will
-return error PI_NOT_INITIALISED.
-
-If the library is initialised the [*gpioCfg**] functions will return
-error PI_INITIALISED.
-
-TEXT*/
-
-/*OVERVIEW
-
-ESSENTIAL
-
-gpioInitialise             Initialise library
-gpioTerminate              Stop library
-
-BASIC
-
-gpioSetMode                Set a GPIO mode
-gpioGetMode                Get a GPIO mode
-
-gpioSetPullUpDown          Set/clear GPIO pull up/down resistor
-
-gpioRead                   Read a GPIO
-gpioWrite                  Write a GPIO
-
-PWM_(overrides_servo_commands_on_same_GPIO)
-
-gpioPWM                    Start/stop PWM pulses on a GPIO
-gpioSetPWMfrequency        Configure PWM frequency for a GPIO
-gpioSetPWMrange            Configure PWM range for a GPIO
-
-gpioGetPWMdutycycle        Get dutycycle setting on a GPIO
-gpioGetPWMfrequency        Get configured PWM frequency for a GPIO
-gpioGetPWMrange            Get configured PWM range for a GPIO
-
-gpioGetPWMrealRange        Get underlying PWM range for a GPIO
-
-Servo_(overrides_PWM_commands_on_same_GPIO)
-
-gpioServo                  Start/stop servo pulses on a GPIO
-
-gpioGetServoPulsewidth     Get pulsewidth setting on a GPIO
-
-INTERMEDIATE
-
-gpioTrigger                Send a trigger pulse to a GPIO
-
-gpioSetWatchdog            Set a watchdog on a GPIO
-
-gpioRead_Bits_0_31         Read all GPIO in bank 1
-gpioRead_Bits_32_53        Read all GPIO in bank 2
-
-gpioWrite_Bits_0_31_Clear  Clear selected GPIO in bank 1
-gpioWrite_Bits_32_53_Clear Clear selected GPIO in bank 2
-
-gpioWrite_Bits_0_31_Set    Set selected GPIO in bank 1
-gpioWrite_Bits_32_53_Set   Set selected GPIO in bank 2
-
-gpioSetAlertFunc           Request a GPIO level change callback
-gpioSetAlertFuncEx         Request a GPIO change callback, extended
-
-gpioSetTimerFunc           Request a regular timed callback
-gpioSetTimerFuncEx         Request a regular timed callback, extended
-
-gpioStartThread            Start a new thread
-gpioStopThread             Stop a previously started thread
-
-ADVANCED
-
-gpioNotifyOpen             Request a notification handle
-gpioNotifyClose            Close a notification
-gpioNotifyOpenWithSize     Request a notification with sized pipe
-gpioNotifyBegin            Start notifications for selected GPIO
-gpioNotifyPause            Pause notifications
-
-gpioHardwareClock          Start hardware clock on supported GPIO
-
-gpioHardwarePWM            Start hardware PWM on supported GPIO
-
-gpioGlitchFilter           Set a glitch filter on a GPIO
-gpioNoiseFilter            Set a noise filter on a GPIO
-
-gpioSetPad                 Sets a pads drive strength
-gpioGetPad                 Gets a pads drive strength
-
-shell                      Executes a shell command
-
-gpioSetISRFunc             Request a GPIO interrupt callback
-gpioSetISRFuncEx           Request a GPIO interrupt callback, extended
-
-gpioSetSignalFunc          Request a signal callback
-gpioSetSignalFuncEx        Request a signal callback, extended
-
-gpioSetGetSamplesFunc      Requests a GPIO samples callback
-gpioSetGetSamplesFuncEx    Requests a GPIO samples callback, extended
-
-Custom
-
-gpioCustom1                User custom function 1
-gpioCustom2                User custom function 2
-
-Events
-
-eventMonitor               Sets the events to monitor
-eventSetFunc               Request an event callback
-eventSetFuncEx             Request an event callback, extended
-
-eventTrigger               Trigger an event
-
-Scripts
-
-gpioStoreScript            Store a script
-gpioRunScript              Run a stored script
-gpioUpdateScript           Set a scripts parameters
-gpioScriptStatus           Get script status and parameters
-gpioStopScript             Stop a running script
-gpioDeleteScript           Delete a stored script
-
-I2C
-
-i2cOpen                    Opens an I2C device
-i2cClose                   Closes an I2C device
-
-i2cWriteQuick              SMBus write quick
-
-i2cReadByte                SMBus read byte
-i2cWriteByte               SMBus write byte
-
-i2cReadByteData            SMBus read byte data
-i2cWriteByteData           SMBus write byte data
-
-i2cReadWordData            SMBus read word data
-i2cWriteWordData           SMBus write word data
-
-i2cReadBlockData           SMBus read block data
-i2cWriteBlockData          SMBus write block data
-
-i2cReadI2CBlockData        SMBus read I2C block data
-i2cWriteI2CBlockData       SMBus write I2C block data
-
-i2cReadDevice              Reads the raw I2C device
-i2cWriteDevice             Writes the raw I2C device
-
-i2cProcessCall             SMBus process call
-i2cBlockProcessCall        SMBus block process call
-
-i2cSwitchCombined          Sets or clears the combined flag
-
-i2cSegments                Performs multiple I2C transactions
-
-i2cZip                     Performs multiple I2C transactions
-
-I2C_BIT_BANG
-
-bbI2COpen                  Opens GPIO for bit banging I2C
-bbI2CClose                 Closes GPIO for bit banging I2C
-
-bbI2CZip                   Performs bit banged I2C transactions
-
-I2C/SPI_SLAVE
-
-bscXfer                    I2C/SPI as slave transfer
-
-SERIAL
-
-serOpen                    Opens a serial device
-serClose                   Closes a serial device
-
-serReadByte                Reads a byte from a serial device
-serWriteByte               Writes a byte to a serial device
-
-serRead                    Reads bytes from a serial device
-serWrite                   Writes bytes to a serial device
-
-serDataAvailable           Returns number of bytes ready to be read
-
-SERIAL_BIT_BANG_(read_only)
-
-gpioSerialReadOpen         Opens a GPIO for bit bang serial reads
-gpioSerialReadClose        Closes a GPIO for bit bang serial reads
-
-gpioSerialReadInvert       Configures normal/inverted for serial reads
-
-gpioSerialRead             Reads bit bang serial data from a GPIO
-
-SPI
-
-spiOpen                    Opens a SPI device
-spiClose                   Closes a SPI device
-
-spiRead                    Reads bytes from a SPI device
-spiWrite                   Writes bytes to a SPI device
-spiXfer                    Transfers bytes with a SPI device
-
-SPI_BIT_BANG
-
-bbSPIOpen                  Opens GPIO for bit banging SPI
-bbSPIClose                 Closes GPIO for bit banging SPI
-
-bbSPIXfer                  Performs bit banged SPI transactions
-
-FILES
-
-fileOpen                   Opens a file
-fileClose                  Closes a file
-
-fileRead                   Reads bytes from a file
-fileWrite                  Writes bytes to a file
-
-fileSeek                   Seeks to a position within a file
-
-fileList                   List files which match a pattern
-
-WAVES
-
-gpioWaveClear              Deletes all waveforms
-
-gpioWaveAddNew             Starts a new waveform
-gpioWaveAddGeneric         Adds a series of pulses to the waveform
-gpioWaveAddSerial          Adds serial data to the waveform
-
-gpioWaveCreate             Creates a waveform from added data
-gpioWaveCreatePad          Creates a waveform of fixed size from added data
-gpioWaveDelete             Deletes a waveform
-
-gpioWaveTxSend             Transmits a waveform
-
-gpioWaveChain              Transmits a chain of waveforms
-
-gpioWaveTxAt               Returns the current transmitting waveform
-
-gpioWaveTxBusy             Checks to see if the waveform has ended
-
-gpioWaveTxStop             Aborts the current waveform
-
-gpioWaveGetCbs             Length in CBs of the current waveform
-gpioWaveGetHighCbs         Length of longest waveform so far
-gpioWaveGetMaxCbs          Absolute maximum allowed CBs
-
-gpioWaveGetMicros          Length in micros of the current waveform
-gpioWaveGetHighMicros      Length of longest waveform so far
-gpioWaveGetMaxMicros       Absolute maximum allowed micros
-
-gpioWaveGetPulses          Length in pulses of the current waveform
-gpioWaveGetHighPulses      Length of longest waveform so far
-gpioWaveGetMaxPulses       Absolute maximum allowed pulses
-
-UTILITIES
-
-gpioDelay                  Delay for a number of microseconds
-
-gpioTick                   Get current tick (microseconds)
-
-gpioHardwareRevision       Get hardware revision
-gpioVersion                Get the pigpio version
-
-getBitInBytes              Get the value of a bit
-putBitInBytes              Set the value of a bit
-
-gpioTime                   Get current time
-gpioSleep                  Sleep for specified time
-
-time_sleep                 Sleeps for a float number of seconds
-time_time                  Float number of seconds since the epoch
-
-CONFIGURATION
-
-gpioCfgBufferSize          Configure the GPIO sample buffer size
-gpioCfgClock               Configure the GPIO sample rate
-gpioCfgDMAchannel          Configure the DMA channel (DEPRECATED)
-gpioCfgDMAchannels         Configure the DMA channels
-gpioCfgPermissions         Configure the GPIO access permissions
-gpioCfgInterfaces          Configure user interfaces
-gpioCfgSocketPort          Configure socket port
-gpioCfgMemAlloc            Configure DMA memory allocation mode
-gpioCfgNetAddr             Configure allowed network addresses
-
-gpioCfgInternals           Configure misc. internals (DEPRECATED)
-gpioCfgGetInternals        Get internal configuration settings
-gpioCfgSetInternals        Set internal configuration settings
-
-EXPERT
-
-rawWaveAddSPI              Not intended for general use
-rawWaveAddGeneric          Not intended for general use
-rawWaveCB                  Not intended for general use
-rawWaveCBAdr               Not intended for general use
-rawWaveGetOOL              Not intended for general use
-rawWaveSetOOL              Not intended for general use
-rawWaveGetOut              Not intended for general use
-rawWaveSetOut              Not intended for general use
-rawWaveGetIn               Not intended for general use
-rawWaveSetIn               Not intended for general use
-rawWaveInfo                Not intended for general use
-rawDumpWave                Not intended for general use
-rawDumpScript              Not intended for general use
-
-OVERVIEW*/
 
 #define PI_INPFIFO "/dev/pigpio"
 #define PI_OUTFIFO "/dev/pigout"
@@ -1310,79 +919,6 @@ will be that set by [*gpioHardwarePWM*].
 ...
 f = gpioGetPWMfrequency(23); // Get frequency used for GPIO23.
 ...
-D*/
-
-
-/*F*/
-int gpioServo(unsigned user_gpio, unsigned pulsewidth);
-/*D
-Starts servo pulses on the GPIO, 0 (off), 500 (most anti-clockwise) to
-2500 (most clockwise).
-
-. .
- user_gpio: 0-31
-pulsewidth: 0, 500-2500
-. .
-
-Returns 0 if OK, otherwise PI_BAD_USER_GPIO or PI_BAD_PULSEWIDTH.
-
-The range supported by servos varies and should probably be determined
-by experiment.  A value of 1500 should always be safe and represents
-the mid-point of rotation.  You can DAMAGE a servo if you command it
-to move beyond its limits.
-
-The following causes an on pulse of 1500 microseconds duration to be
-transmitted on GPIO 17 at a rate of 50 times per second. This will
-command a servo connected to GPIO 17 to rotate to its mid-point.
-
-...
-gpioServo(17, 1000); // Move servo to safe position anti-clockwise.
-
-gpioServo(23, 1500); // Move servo to centre position.
-
-gpioServo(25, 2000); // Move servo to safe position clockwise.
-...
-
-OTHER UPDATE RATES:
-
-This function updates servos at 50Hz.  If you wish to use a different
-update frequency you will have to use the PWM functions.
-
-. .
-PWM Hz    50   100  200  400  500
-1E6/Hz 20000 10000 5000 2500 2000
-. .
-
-Firstly set the desired PWM frequency using [*gpioSetPWMfrequency*].
-
-Then set the PWM range using [*gpioSetPWMrange*] to 1E6/frequency.
-Doing this allows you to use units of microseconds when setting
-the servo pulsewidth.
-
-E.g. If you want to update a servo connected to GPIO25 at 400Hz
-
-. .
-gpioSetPWMfrequency(25, 400);
-
-gpioSetPWMrange(25, 2500);
-. .
-
-Thereafter use the PWM command to move the servo,
-e.g. gpioPWM(25, 1500) will set a 1500 us pulse.
-D*/
-
-
-/*F*/
-int gpioGetServoPulsewidth(unsigned user_gpio);
-/*D
-Returns the servo pulsewidth setting for the GPIO.
-
-. .
-user_gpio: 0-31
-. .
-
-Returns 0 (off), 500 (most anti-clockwise) to 2500 (most clockwise)
-if OK, otherwise PI_BAD_USER_GPIO or PI_NOT_SERVO_GPIO.
 D*/
 
 
@@ -4160,6 +3696,12 @@ automatically scaled to take this into account.
 D*/
 
 /*F*/
+int stopHardwarePWM(void);
+/*D
+Stops hardware pwm.
+D*/
+
+/*F*/
 int gpioTime(unsigned timetype, int *seconds, int *micros);
 /*D
 Updates the seconds and micros variables with the current time.
@@ -4522,13 +4064,6 @@ applies.  If no entry matches a file then access is denied.
 
 Suppose /opt/pigpio/access contains the following entries
 
-. .
-/home/* n
-/home/pi/shared/dir_1/* w
-/home/pi/shared/dir_2/* r
-/home/pi/shared/dir_3/* u
-/home/pi/shared/dir_1/file.txt n
-. .
 
 Files may be written in directory dir_1 with the exception
 of file.txt.
@@ -4577,9 +4112,6 @@ int main(int argc, char *argv[])
    char buf[60000];
 
    if (gpioInitialise() < 0) return 1;
-
-   // assumes /opt/pigpio/access contains the following line
-   // /ram/*.c r
 
    handle = fileOpen("/ram/pigpio.c", PI_FILE_READ);
 
@@ -4733,9 +4265,6 @@ int main(int argc, char *argv[])
    char buf[1000];
 
    if (gpioInitialise() < 0) return 1;
-
-   // assumes /opt/pigpio/access contains the following line
-   // /ram/*.c r
 
    c = fileList("/ram/p*.c", buf, sizeof(buf));
 
