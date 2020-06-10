@@ -3,7 +3,7 @@
 // BSD license. See the LICENSE file found in the top-level directory of this
 // distribution.
 
-#include "log.h"
+#include <rtuartscreader/log.h>
 
 #include <stdbool.h>
 #include <stdlib.h>

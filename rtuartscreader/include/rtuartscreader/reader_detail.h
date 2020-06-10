@@ -7,7 +7,7 @@
 
 #include <PCSC/ifdhandler.h>
 
-#include "transport.h"
+#include <rtuartscreader/transport/transport_t.h>
 
 typedef enum reader_power_state_enum {
     POWERED_OFF = 0,

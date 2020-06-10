@@ -3,12 +3,12 @@
 // BSD license. See the LICENSE file found in the top-level directory of this
 // distribution.
 
-#include "reader_list.h"
+#include <rtuartscreader/reader_list.h>
 
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "reader_detail.h"
+#include <rtuartscreader/reader_detail.h>
 
 #define arraysize(array) (sizeof(array) / sizeof(array[0]))
 

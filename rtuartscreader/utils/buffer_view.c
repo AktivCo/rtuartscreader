@@ -1,4 +1,4 @@
-#include "buffer_view.h"
+#include <rtuartscreader/utils/buffer_view.h>
 
 void pop_front_buffer_view_init(pop_front_buffer_view* buffer, const uint8_t* data, size_t size) {
     buffer->data = data;

@@ -2,7 +2,11 @@
 
 #include <stdint.h>
 
-#include "transport.h"
+#include <rtuartscreader/transport/transport_t.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
     transmit_status_ok = 0,
@@ -14,3 +18,7 @@ typedef enum {
 
 transmit_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t* tx_buf, uint16_t tx_len,
                                    uint8_t* rx_buf, uint16_t* rx_len);
+
+#ifdef __cplusplus
+}
+#endif

@@ -3,14 +3,15 @@
 // BSD license. See the LICENSE file found in the top-level directory of this
 // distribution.
 
-#include "reader.h"
+#include <rtuartscreader/reader.h>
 
 #include <stdint.h>
 #include <string.h>
 
-#include "apdu_t0.h"
-#include "reader_detail.h"
-#include "transport.h"
+#include <rtuartscreader/apdu_t0.h>
+#include <rtuartscreader/reader_detail.h>
+#include <rtuartscreader/transport/initialize.h>
+#include <rtuartscreader/transport/sendrecv.h>
 
 
 // TODO: remove me

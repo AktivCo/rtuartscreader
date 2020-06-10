@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "log.h"
-#include "reader.h"
-#include "reader_list.h"
+#include <rtuartscreader/log.h>
+#include <rtuartscreader/reader.h>
+#include <rtuartscreader/reader_list.h>
 
 RESPONSECODE IFDHCreateChannelByName(DWORD Lun, LPSTR DeviceName) {
     init_log();
