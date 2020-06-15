@@ -65,7 +65,7 @@ def format_file(path_to_file=None):
     relative_path = path.relpath(path_to_file, path.commonprefix([path_to_file, execute_path]))
 
     check_attr = console("git check-attr clang-format -- {0}".format(relative_path))
-    lang = compile("clang-format: (.*)\n").findall(check_attr)[0]
+    lang = compile(": clang-format: (.*)\n").findall(check_attr)[0]
     if lang == "unset" or lang == "unspecified":
         return 0
 
