@@ -5,6 +5,9 @@
 
 #include <PCSC/ifdhandler.h>
 
+#include <rtuartscreader/iso7816_3/detail/utils.h>
+#include <rtuartscreader/iso7816_3/f_d_index.h>
+#include <rtuartscreader/iso7816_3/status.h>
 #include <rtuartscreader/transport/transport_t.h>
 
 #ifdef __cplusplus
@@ -15,15 +18,7 @@ extern "C" {
 #define PROTOCOL_T1 1
 #define MAX_PROTOCOL_VALUE 15
 
-typedef enum {
-    atr_status_ok = 0,
-    atr_status_communication_error,
-    atr_status_invalid_atr
-} atr_status_t;
-
 #define MAX_INTERFACE_BYTES_COUNT (MAX_ATR_SIZE - 3) // Anything except T0 & TCK
-
-#define BAD_ATR_OFFSET 0xFF
 
 // All offset fields have values in between 0..MAX_ATR_SIZE
 // or BAD_ATR_OFFSET, if there is no such byte in ATR
@@ -39,13 +34,6 @@ typedef struct atr {
     size_t historical_bytes_len;
     uint8_t tck_offset;
 } atr_t;
-
-typedef struct f_d_index {
-    uint8_t f_index;
-    uint8_t d_index;
-} f_d_index_t;
-
-extern const f_d_index_t f_d_index_default;
 
 typedef struct ta1 {
     bool is_present;
@@ -78,9 +66,9 @@ typedef struct atr_info {
     bool explicit_protocols[MAX_PROTOCOL_VALUE + 1];
 } atr_info_t;
 
-atr_status_t read_atr(const transport_t* transport, atr_t* info);
+iso7816_3_status_t read_atr(const transport_t* transport, atr_t* info);
 
-atr_status_t parse_atr(const atr_t* atr, atr_info_t* info);
+iso7816_3_status_t parse_atr(const atr_t* atr, atr_info_t* info);
 
 #ifdef __cplusplus
 }

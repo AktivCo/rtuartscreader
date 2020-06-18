@@ -1,4 +1,4 @@
-#include <rtuartscreader/atr.h>
+#include <rtuartscreader/iso7816_3/atr.h>
 
 #include <initializer_list>
 #include <memory>
@@ -40,7 +40,7 @@ public:
     auto getAtr() {
         atr_t atr;
         auto r = read_atr(nullptr, &atr);
-        if (r != atr_status_ok) throw runtime_error("read_atr failed");
+        if (r != iso7816_3_status_ok) throw runtime_error("read_atr failed");
 
         return atr;
     }
@@ -48,7 +48,7 @@ public:
     auto parseAtr(const atr_t& atr) {
         atr_info_t atr_info;
         auto r = parse_atr(&atr, &atr_info);
-        if (r != atr_status_ok) throw runtime_error("parse_atr failed");
+        if (r != iso7816_3_status_ok) throw runtime_error("parse_atr failed");
 
         return atr_info;
     }
@@ -243,7 +243,7 @@ TEST_F(TestAtr, InvalidTs) {
 
     atr_t atr;
     auto r = read_atr(nullptr, &atr);
-    EXPECT_EQ(atr_status_invalid_atr, r);
+    EXPECT_EQ(iso7816_3_status_unexpected_card_response, r);
 }
 
 TEST_F(TestAtr, InvalidTck) {
@@ -254,7 +254,7 @@ TEST_F(TestAtr, InvalidTck) {
 
     atr_t atr;
     auto r = read_atr(nullptr, &atr);
-    EXPECT_EQ(atr_status_invalid_atr, r);
+    EXPECT_EQ(iso7816_3_status_unexpected_card_response, r);
 }
 
 TEST_F(TestAtr, MaxLength) {
@@ -286,7 +286,7 @@ TEST_P(TestAtrOverflow, Overflow) {
 
     atr_t atr;
     auto r = read_atr(nullptr, &atr);
-    EXPECT_EQ(atr_status_invalid_atr, r);
+    EXPECT_EQ(iso7816_3_status_unexpected_card_response, r);
 }
 
 namespace {

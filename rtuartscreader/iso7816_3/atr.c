@@ -1,24 +1,18 @@
-#include <rtuartscreader/atr.h>
+#include <rtuartscreader/iso7816_3/atr.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <rtuartscreader/iso7816_3/detail/error.h>
+#include <rtuartscreader/iso7816_3/detail/utils.h>
 #include <rtuartscreader/transport/sendrecv.h>
 #include <rtuartscreader/utils/common.h>
-#include <rtuartscreader/utils/error.h>
-
-#define NTH_BIT_ONLY(x, bit_number) ((x) & (1ul << (bit_number - 1)))
 
 #define TA_IS_PRESENT(x) (!!NTH_BIT_ONLY(x, 1))
 #define TB_IS_PRESENT(x) (!!NTH_BIT_ONLY(x, 2))
 #define TC_IS_PRESENT(x) (!!NTH_BIT_ONLY(x, 3))
 #define TD_IS_PRESENT(x) (!!NTH_BIT_ONLY(x, 4))
-
-#define HIOCT(x) ((x & 0xf0) >> 4)
-#define LOWOCT(x) (x & 0x0f)
-
-#define RETURN_ON_TRANSPORT_ERROR(r) POPULATE_ERROR(r, transport_status_ok, atr_status_communication_error)
 
 #define SAFE_INCREMENT_N(counter, n, limit, error) \
     do {                                           \
@@ -29,8 +23,6 @@
     } while (0)
 
 #define SAFE_INCREMENT(counter, limit, error) SAFE_INCREMENT_N(counter, 1, limit, error)
-
-const f_d_index_t f_d_index_default = { .f_index = 1, .d_index = 1 };
 
 typedef struct atr_headers {
     uint8_t ta : 2;
@@ -77,7 +69,7 @@ static void init_atr(atr_t* atr) {
     atr->historical_bytes_len = 0;
 }
 
-atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
+iso7816_3_status_t read_atr(const transport_t* transport, atr_t* atr) {
     init_atr(atr);
 
     size_t i = 0;
@@ -88,12 +80,12 @@ atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
     atr->atr[i] = ts;
 
     if (ts != 0x3B)
-        return atr_status_invalid_atr;
+        return iso7816_3_status_unexpected_card_response;
 
     uint8_t t0;
     r = transport_recv_byte(transport, &t0);
     RETURN_ON_TRANSPORT_ERROR(r);
-    SAFE_INCREMENT(i, MAX_ATR_SIZE, atr_status_invalid_atr);
+    SAFE_INCREMENT(i, MAX_ATR_SIZE, iso7816_3_status_unexpected_card_response);
     atr->t0_offset = i;
     atr->atr[i] = t0;
 
@@ -105,7 +97,7 @@ atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
             uint8_t ta;
             r = transport_recv_byte(transport, &ta);
             RETURN_ON_TRANSPORT_ERROR(r);
-            SAFE_INCREMENT(i, MAX_ATR_SIZE, atr_status_invalid_atr);
+            SAFE_INCREMENT(i, MAX_ATR_SIZE, iso7816_3_status_unexpected_card_response);
             atr->ta_offset[level] = i;
             atr->atr[i] = ta;
         }
@@ -115,7 +107,7 @@ atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
             uint8_t tb;
             r = transport_recv_byte(transport, &tb);
             RETURN_ON_TRANSPORT_ERROR(r);
-            SAFE_INCREMENT(i, MAX_ATR_SIZE, atr_status_invalid_atr);
+            SAFE_INCREMENT(i, MAX_ATR_SIZE, iso7816_3_status_unexpected_card_response);
             atr->tb_offset[level] = i;
             atr->atr[i] = tb;
         }
@@ -124,7 +116,7 @@ atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
             uint8_t tc;
             r = transport_recv_byte(transport, &tc);
             RETURN_ON_TRANSPORT_ERROR(r);
-            SAFE_INCREMENT(i, MAX_ATR_SIZE, atr_status_invalid_atr);
+            SAFE_INCREMENT(i, MAX_ATR_SIZE, iso7816_3_status_unexpected_card_response);
             atr->tc_offset[level] = i;
             atr->atr[i] = tc;
         }
@@ -133,7 +125,7 @@ atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
             uint8_t td;
             r = transport_recv_byte(transport, &td);
             RETURN_ON_TRANSPORT_ERROR(r);
-            SAFE_INCREMENT(i, MAX_ATR_SIZE, atr_status_invalid_atr);
+            SAFE_INCREMENT(i, MAX_ATR_SIZE, iso7816_3_status_unexpected_card_response);
             atr->td_offset[level] = i;
             atr->atr[i] = td;
 
@@ -146,10 +138,10 @@ atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
     atr->historical_bytes_len = LOWOCT(atr->atr[atr->t0_offset]);
 
     if (atr->historical_bytes_len) {
-        SAFE_INCREMENT(i, MAX_ATR_SIZE, atr_status_invalid_atr);
+        SAFE_INCREMENT(i, MAX_ATR_SIZE, iso7816_3_status_unexpected_card_response);
         atr->historical_bytes_offset = i;
 
-        SAFE_INCREMENT_N(i, atr->historical_bytes_len - 1, MAX_ATR_SIZE, atr_status_invalid_atr);
+        SAFE_INCREMENT_N(i, atr->historical_bytes_len - 1, MAX_ATR_SIZE, iso7816_3_status_unexpected_card_response);
         r = transport_recv_bytes(transport, atr->atr + atr->historical_bytes_offset, atr->historical_bytes_len);
         RETURN_ON_TRANSPORT_ERROR(r);
     }
@@ -158,26 +150,26 @@ atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
         uint8_t tck;
         r = transport_recv_byte(transport, &tck);
         RETURN_ON_TRANSPORT_ERROR(r);
-        SAFE_INCREMENT(i, MAX_ATR_SIZE, atr_status_invalid_atr);
+        SAFE_INCREMENT(i, MAX_ATR_SIZE, iso7816_3_status_unexpected_card_response);
         atr->tck_offset = i;
         atr->atr[i] = tck;
 
         atr->atr_len = i + 1;
 
         if (!is_tck_correct(atr->atr, atr->atr_len))
-            return atr_status_invalid_atr;
+            return iso7816_3_status_unexpected_card_response;
     } else {
         atr->atr_len = i + 1;
     }
 
-    return atr_status_ok;
+    return iso7816_3_status_ok;
 }
 
 static void init_atr_info(atr_info_t* info) {
     memset(info, 0, sizeof(*info));
 }
 
-atr_status_t parse_atr(const atr_t* atr, atr_info_t* info) {
+iso7816_3_status_t parse_atr(const atr_t* atr, atr_info_t* info) {
     init_atr_info(info);
 
     if (atr->ta_offset[0] != BAD_ATR_OFFSET) {
@@ -218,5 +210,5 @@ atr_status_t parse_atr(const atr_t* atr, atr_info_t* info) {
         info->explicit_protocols[protocol] = true;
     }
 
-    return atr_status_ok;
+    return iso7816_3_status_ok;
 }

@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <rtuartscreader/apdu_t0.h>
+#include <rtuartscreader/iso7816_3/apdu_t0.h>
 #include <rtuartscreader/reader_detail.h>
 #include <rtuartscreader/transport/initialize.h>
 #include <rtuartscreader/transport/sendrecv.h>
@@ -127,7 +127,7 @@ reader_status_t reader_reset(Reader* reader, UCHAR const** atr, DWORD* length) {
 }
 
 reader_status_t reader_transmit(Reader* reader, UCHAR const* txBuffer, DWORD txLength, UCHAR* rxBuffer, PDWORD rxLength) {
-    transmit_status_t r = transmit_status_ok;
+    iso7816_3_status_t r = iso7816_3_status_ok;
 
     if (reader->power != POWERED_ON) {
         return reader_status_reader_unpowered;
@@ -154,17 +154,17 @@ reader_status_t reader_transmit(Reader* reader, UCHAR const* txBuffer, DWORD txL
 
     r = t0_transmit_apdu(&reader->transport, txBuffer, sendLength, rxBuffer, &recvLength);
 
-    if (r == transmit_status_ok)
+    if (r == iso7816_3_status_ok)
         *rxLength = recvLength;
     else
         *rxLength = 0;
 
     // TODO: figure out whether to reset the card in case of communication error
-    if (r == transmit_status_communication_error) {
+    if (r == iso7816_3_status_communication_error) {
         return reader_status_communication_error;
-    } else if (r == transmit_status_insufficient_buffer) {
+    } else if (r == iso7816_3_status_insufficient_buffer) {
         return reader_status_memory_error;
-    } else if (r != transmit_status_ok) {
+    } else if (r != iso7816_3_status_ok) {
         return reader_status_internal_error;
     }
 

@@ -1,8 +1,8 @@
-#include <rtuartscreader/apdu_t0.h>
+#include <rtuartscreader/iso7816_3/apdu_t0.h>
 
+#include <rtuartscreader/iso7816_3/detail/error.h>
 #include <rtuartscreader/transport/sendrecv.h>
 #include <rtuartscreader/transport/transport_t.h>
-
 #include <rtuartscreader/utils/buffer_view.h>
 
 #define APDU_HEADER_SIZE 5
@@ -13,13 +13,6 @@
 #define APDU_MAX_NE_VALUE 0x100
 
 #define PROCEDURE_BYTE_NULL 0x60
-
-#define RETURN_ON_TRANSPORT_ERROR(r)                    \
-    do {                                                \
-        if (r != transport_status_ok) {                 \
-            return transmit_status_communication_error; \
-        }                                               \
-    } while (0)
 
 
 static inline uint16_t le_to_ne(uint8_t le) {
@@ -38,8 +31,8 @@ static transport_status_t send_apdu_header(const transport_t* transport, const u
     return transport_send_byte(transport, p3);
 }
 
-static transmit_status_t t0_transmit_data(const transport_t* transport, const uint8_t ack, pop_front_buffer_view* send_data,
-                                          push_back_buffer_view* recv_data) {
+static iso7816_3_status_t t0_transmit_data(const transport_t* transport, const uint8_t ack, pop_front_buffer_view* send_data,
+                                           push_back_buffer_view* recv_data) {
     const uint8_t inv_ack = ~ack;
 
     while (1) {
@@ -55,12 +48,12 @@ static transmit_status_t t0_transmit_data(const transport_t* transport, const ui
         // SW1 byte, recieve SW2 and quit
         if ((proc_byte & 0xf0) == 0x60 || (proc_byte & 0xf0) == 0x90) {
             if (push_back_buffer_view_full(recv_data)) {
-                return transmit_status_protocol_error;
+                return iso7816_3_status_unexpected_card_response;
             }
             push_back_buffer_view_push(recv_data, proc_byte);
 
             if (push_back_buffer_view_full(recv_data)) {
-                return transmit_status_protocol_error;
+                return iso7816_3_status_unexpected_card_response;
             }
 
             r = transport_recv_byte(transport, push_back_buffer_view_reserve_n(recv_data, 1));
@@ -79,7 +72,7 @@ static transmit_status_t t0_transmit_data(const transport_t* transport, const ui
             } else {
                 size_t free_space = push_back_buffer_view_free_space(recv_data);
                 if (free_space <= 2) {
-                    return transmit_status_protocol_error;
+                    return iso7816_3_status_unexpected_card_response;
                 }
 
                 uint8_t* data = push_back_buffer_view_reserve_n(recv_data, free_space - 2);
@@ -98,7 +91,7 @@ static transmit_status_t t0_transmit_data(const transport_t* transport, const ui
             } else {
                 size_t free_space = push_back_buffer_view_free_space(recv_data);
                 if (free_space <= 2) {
-                    return transmit_status_protocol_error;
+                    return iso7816_3_status_unexpected_card_response;
                 }
 
                 r = transport_recv_byte(transport, push_back_buffer_view_reserve_n(recv_data, 1));
@@ -107,12 +100,12 @@ static transmit_status_t t0_transmit_data(const transport_t* transport, const ui
         }
     }
 
-    return transmit_status_ok;
+    return iso7816_3_status_ok;
 }
 
 // TODO: add logging for transport IO functions
-transmit_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t* tx_buf, uint16_t tx_len,
-                                   uint8_t* rx_buf, uint16_t* rx_len) {
+iso7816_3_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t* tx_buf, uint16_t tx_len,
+                                    uint8_t* rx_buf, uint16_t* rx_len) {
     transport_status_t r;
 
     uint16_t ne = 0; // expected data size to receive
@@ -121,7 +114,7 @@ transmit_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t* 
     uint8_t p3;
 
     if (tx_len < APDU_HEADER_SIZE - 1) {
-        return transmit_status_invalid_params;
+        return iso7816_3_status_invalid_params;
     } else if (tx_len == APDU_HEADER_SIZE - 1) {
         p3 = 0;
     } else if (tx_len == APDU_HEADER_SIZE) {
@@ -132,18 +125,18 @@ transmit_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t* 
         nc = p3;
 
         if (tx_len < APDU_HEADER_SIZE + nc) {
-            return transmit_status_invalid_params;
+            return iso7816_3_status_invalid_params;
         } else if (tx_len == nc + APDU_HEADER_SIZE) {
             ne = 0;
         } else if (tx_len == nc + APDU_HEADER_SIZE + 1) {
             ne = le_to_ne(tx_buf[tx_len - 1]);
         } else {
-            return transmit_status_invalid_params;
+            return iso7816_3_status_invalid_params;
         }
     }
 
     if (*rx_len < ne + 2) {
-        return transmit_status_insufficient_buffer;
+        return iso7816_3_status_insufficient_buffer;
     }
 
     r = send_apdu_header(transport, tx_buf, p3);
@@ -157,12 +150,12 @@ transmit_status_t t0_transmit_apdu(const transport_t* transport, const uint8_t* 
 
     const uint8_t ack = tx_buf[APDU_INS_OFFSET];
 
-    transmit_status_t transmit_data_result = t0_transmit_data(transport, ack, &send_data, &recv_data);
-    if (transmit_data_result != transmit_status_ok) {
+    iso7816_3_status_t transmit_data_result = t0_transmit_data(transport, ack, &send_data, &recv_data);
+    if (transmit_data_result != iso7816_3_status_ok) {
         return transmit_data_result;
     }
 
     *rx_len = push_back_buffer_view_size(&recv_data);
 
-    return transmit_status_ok;
+    return iso7816_3_status_ok;
 }
