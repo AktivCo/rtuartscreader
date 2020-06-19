@@ -15,6 +15,8 @@ hw_status_t hw_stop_clock();
 
 hw_status_t hw_rst_initialize();
 
+hw_status_t hw_rst_down();
+
 hw_status_t hw_rst_down_up(uint32_t delay_us);
 
 hw_status_t hw_rst_deinitialize();

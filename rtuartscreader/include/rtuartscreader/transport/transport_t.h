@@ -3,15 +3,21 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct {
-    uint32_t self;
-    double max_freq;
-    uint8_t WT;
-} etu_t;
+#include <termios.h>
+
+typedef struct transmit_speed {
+    uint32_t freq;
+    speed_t baudrate;
+} transmit_speed_t;
+
+typedef struct transmit_params {
+    transmit_speed_t transmit_speed;
+    uint32_t etu;
+    uint32_t extra_gt_us; // excess over 12 etu
+    uint8_t wt_ds;        // d for deci-
+} transmit_params_t;
 
 typedef struct {
     int handle;
-    uint32_t baudrate;
-    uint32_t freq;
-    etu_t etu;
+    transmit_params_t params;
 } transport_t;

@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "transport_status_t.h"
-#include "transport_t.h"
+#include <rtuartscreader/transport/status.h>
+#include <rtuartscreader/transport/transport_t.h>
 
 #ifdef __cplusplus
 extern "C" {

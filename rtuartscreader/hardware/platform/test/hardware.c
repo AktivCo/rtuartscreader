@@ -16,6 +16,10 @@ hw_status_t hw_rst_initialize() {
     return hw_status_ok;
 }
 
+hw_status_t hw_rst_down() {
+    return hw_status_ok;
+}
+
 hw_status_t hw_rst_down_up(uint32_t delay_us) {
     return hw_status_ok;
 }

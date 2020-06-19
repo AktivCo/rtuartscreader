@@ -37,7 +37,7 @@ target_compile_options(${STATIC_TARGET} PRIVATE -Werror -Wall -Wextra -Wno-unuse
 
 target_include_directories(${STATIC_TARGET} PUBLIC "${INCLUDE_DIR}")
 
-set(DEPS pcsc-headers dl log boost_preprocessor)
+set(DEPS pcsc-headers dl log boost_preprocessor m)
 if (NOT DEFINED RUN_TESTS)
 	set(DEPS ${DEPS} pigpio)
 endif()

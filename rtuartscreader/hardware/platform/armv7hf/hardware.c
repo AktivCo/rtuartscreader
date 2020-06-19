@@ -49,6 +49,13 @@ hw_status_t hw_rst_initialize() {
     return hw_status_ok;
 }
 
+hw_status_t hw_rst_down() {
+    int r = gpioWrite(PIN_SC_RST, 0);
+    RETURN_ON_PIGPIO_ERROR(r);
+
+    return hw_status_ok;
+}
+
 hw_status_t hw_rst_down_up(uint32_t delay_us) {
     int r = gpioWrite(PIN_SC_RST, 0);
     RETURN_ON_PIGPIO_ERROR(r);
