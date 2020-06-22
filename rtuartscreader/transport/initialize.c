@@ -9,7 +9,7 @@
 #include <rtuartscreader/transport/detail/transmit_params.h>
 
 
-transport_status_t transport_setup_serial_settings(const transport_t* transport) {
+static transport_status_t transport_setup_serial_settings(const transport_t* transport) {
     struct termios options = { 0 };
 
     int ret = tcgetattr(transport->handle, &options);
@@ -39,7 +39,7 @@ transport_status_t transport_setup_serial_settings(const transport_t* transport)
     return transport_status_ok;
 }
 
-transport_status_t transport_initialize(transport_t* transport, const char* reader_name) {
+transport_status_t transport_initialize_impl(transport_t* transport, const char* reader_name) {
     hw_status_t hw_r;
     transport_status_t r;
     int os_r;
@@ -88,7 +88,7 @@ err_label:
     return r;
 }
 
-transport_status_t transport_reinitialize(transport_t* transport, const transmit_params_t* params) {
+transport_status_t transport_reinitialize_impl(transport_t* transport, const transmit_params_t* params) {
     transport->params = *params;
 
     transport_status_t r = transport_setup_serial_settings(transport);
@@ -104,7 +104,7 @@ transport_status_t transport_reinitialize(transport_t* transport, const transmit
     return transport_status_ok;
 }
 
-transport_status_t transport_deinitialize(const transport_t* transport) {
+transport_status_t transport_deinitialize_impl(const transport_t* transport) {
     hw_status_t r = hw_stop_clock();
     RETURN_ON_HW_ERROR(r);
 
@@ -118,3 +118,7 @@ transport_status_t transport_deinitialize(const transport_t* transport) {
 
     return transport_status_ok;
 }
+
+#define PIMPL_NAME_PREFIX transport_initialize
+#define PIMPL_FUNCTIONS_DECLARATION_PATH <rtuartscreader/transport/detail/transport_initialize_functions.h>
+#include <rtuartscreader/pimpl/source.h>

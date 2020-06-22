@@ -91,10 +91,10 @@ namespace rt {
 namespace faketransport {
 
 void initializeSendRecv() {
-    transport_set_sendrecv_impl(&gSendRecvImpl);
+    transport_sendrecv_impl_set(&gSendRecvImpl);
 }
 void deinitializeSendRecv() {
-    transport_reset_sendrecv_impl();
+    transport_sendrecv_impl_reset();
 }
 
 } // namespace faketransport
