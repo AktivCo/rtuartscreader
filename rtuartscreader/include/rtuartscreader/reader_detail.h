@@ -19,10 +19,10 @@ typedef enum reader_card_presence_enum {
     PRESENT_TRUE
 } CARD_PRESENCE;
 
-typedef struct reader_st {
+struct reader_st {
     POWER_STATE power;
     CARD_PRESENCE presence;
     UCHAR atr[MAX_ATR_SIZE];
     DWORD atrLength;
     transport_t transport;
-} Reader;
+};

@@ -82,7 +82,7 @@ RESPONSECODE IFDHCreateChannel(DWORD Lun, DWORD Channel) {
 
     char deviceName[256] = { 0 };
 
-    if (snprintf(deviceName, sizeof(deviceName), "/dev/pcsc/%lu", Channel) < 0) {
+    if (snprintf(deviceName, sizeof(deviceName), "/dev/pcsc/%lu", (unsigned long int)Channel) < 0) {
         LOG_CRITICAL_RETURN_IFD(IFD_COMMUNICATION_ERROR, "Failed to snprintf");
     }
 
