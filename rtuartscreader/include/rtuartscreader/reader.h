@@ -29,3 +29,4 @@ reader_status_t reader_power_on(Reader* reader, UCHAR const** atr, DWORD* length
 reader_status_t reader_reset(Reader* reader, UCHAR const** atr, DWORD* length);
 reader_status_t reader_transmit(Reader* reader, UCHAR const* txBuffer, DWORD txLength, UCHAR* rxBuffer, PDWORD rxLength);
 reader_status_t reader_is_present(Reader* reader);
+reader_status_t reader_is_powered(const Reader* reader);

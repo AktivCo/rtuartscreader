@@ -107,6 +107,20 @@ RESPONSECODE GetCapability(DWORD Length, const UCHAR* value, PDWORD targetLength
     LOG_INFO_RETURN_IFD(IFD_SUCCESS);
 }
 
+static RESPONSECODE ZeroAtr(PUCHAR Atr, PDWORD AtrLength) {
+    if (!AtrLength) {
+        LOG_ERROR_RETURN_IFD(IFD_COMMUNICATION_ERROR, "Invalid AtrLength ptr");
+    }
+    if (!Atr) {
+        LOG_ERROR_RETURN_IFD(IFD_COMMUNICATION_ERROR, "Invalid Atr ptr");
+    }
+
+    memset(Atr, 0, *AtrLength * sizeof(Atr[0]));
+    *AtrLength = 0;
+
+    LOG_INFO_RETURN_IFD(IFD_SUCCESS);
+}
+
 RESPONSECODE IFDHGetCapabilities(DWORD Lun, DWORD Tag, PDWORD Length, PUCHAR Value) {
     LOG_INFO("Lun: %lu, Tag: 0x%lx", Lun, Tag);
 
@@ -118,9 +132,14 @@ RESPONSECODE IFDHGetCapabilities(DWORD Lun, DWORD Tag, PDWORD Length, PUCHAR Val
             LOG_ERROR_RETURN_IFD(IFD_COMMUNICATION_ERROR, "Invalid Lun");
         }
 
+        reader_status_t r = reader_is_powered(reader);
+        if (r == reader_status_reader_unpowered) {
+            return ZeroAtr(Value, Length);
+        }
+
         const UCHAR* atr;
         DWORD atrLen;
-        reader_status_t r = reader_get_atr(reader, &atr, &atrLen);
+        r = reader_get_atr(reader, &atr, &atrLen);
         if (r != reader_status_ok) {
             LOG_ERROR_RETURN_IFD(IFD_COMMUNICATION_ERROR, "reader_get_atr failed %d", r);
         }
@@ -196,7 +215,10 @@ RESPONSECODE IFDHPowerICC(DWORD Lun, DWORD Action, PUCHAR Atr, PDWORD AtrLength)
         if (r != reader_status_ok) {
             LOG_ERROR_RETURN_IFD(IFD_COMMUNICATION_ERROR, "reader_power_off failed: %d", r);
         }
-        LOG_INFO_RETURN_IFD(IFD_SUCCESS);
+
+        // pcsclite reference: IFD_POWER_DOWN
+        // Power down the card (Atr and AtrLength should be zeroed)
+        return ZeroAtr(Atr, AtrLength);
     default:
         LOG_ERROR_RETURN_IFD(IFD_ERROR_NOT_SUPPORTED, "Action: %lx", Action);
     }

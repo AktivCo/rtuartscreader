@@ -11,25 +11,21 @@
 #include <rtuartscreader/iso7816_3/apdu_t0.h>
 #include <rtuartscreader/reader_detail.h>
 #include <rtuartscreader/transport/initialize.h>
+#include <rtuartscreader/transport/reset.h>
 #include <rtuartscreader/transport/sendrecv.h>
-
-
-// TODO: remove me
-static const uint8_t kFakeAtr[] = { 0x3B, 0x1A, 0x96, 0x72, 0x75, 0x74, 0x6F, 0x6B, 0x65, 0x6E, 0x6D, 0x73, 0x63 };
-static const size_t kFakeAtrLen = sizeof(kFakeAtr);
+#include <rtuartscreader/utils/common.h>
+#include <rtuartscreader/utils/error.h>
 
 reader_status_t reader_open(Reader* reader, const char* readerName) {
     transport_status_t r = transport_initialize(&reader->transport, readerName);
-    if (r)
-        return reader_status_internal_error;
+    POPULATE_ERROR(r, transport_status_ok, reader_status_internal_error);
 
     return reader_status_ok;
 }
 
 reader_status_t reader_close(Reader* reader) {
     transport_status_t r = transport_deinitialize(&reader->transport);
-    if (r)
-        return reader_status_internal_error;
+    POPULATE_ERROR(r, transport_status_ok, reader_status_internal_error);
 
     return reader_status_ok;
 }
@@ -41,22 +37,21 @@ reader_status_t reader_get_atr(Reader const* reader, UCHAR const** atr, DWORD* l
     return reader_status_ok;
 }
 
-reader_status_t reader_power_off_impl(Reader* reader) {
-    // TODO
-
-    memset(reader->atr, 0, sizeof(reader->atr));
-    reader->atrLength = 0;
+static reader_status_t reader_reset_impl(Reader* reader) {
+    size_t atrLength;
+    transport_status_t r = transport_reset(&reader->transport, reader->atr, &atrLength);
+    POPULATE_ERROR(r, transport_status_ok, reader_status_internal_error);
+    reader->atrLength = atrLength;
 
     return reader_status_ok;
 }
 
 reader_status_t reader_power_off(Reader* reader) {
-    reader_status_t r = reader_status_ok;
-
-    if (reader->power == POWERED_ON) {
-        r = reader_power_off_impl(reader);
+    if (reader->power == POWERED_OFF) {
+        return reader_status_ok;
     }
 
+    reader_status_t r = reader_reset_impl(reader);
     if (r != reader_status_ok) {
         return r;
     }
@@ -66,62 +61,18 @@ reader_status_t reader_power_off(Reader* reader) {
     return reader_status_ok;
 }
 
-reader_status_t reader_power_on_impl(Reader* reader) {
-    // TODO: power on and fill reader->atr and reader->atrLength
-    // TODO: return IFD_COMMUNICATION_ERROR if power on is failed due to unresponsive/absent card
-    // TODO: set reader->atrLength to 0 and return IFD_ERROR_POWER_ACTION if power on is failed for other reasons
-
-    // TODO: remove me
-    memcpy(reader->atr, kFakeAtr, kFakeAtrLen);
-    reader->atrLength = kFakeAtrLen;
-
-    return reader_status_ok;
+reader_status_t reader_power_on(Reader* reader, UCHAR const** atr, DWORD* length) {
+    return reader_reset(reader, atr, length);
 }
 
-reader_status_t reader_power_on(Reader* reader, UCHAR const** atr, DWORD* length) {
-    reader_status_t r;
-
-    reader->power = POWERED_ON;
-
-    r = reader_power_on_impl(reader);
+reader_status_t reader_reset(Reader* reader, UCHAR const** atr, DWORD* length) {
+    reader_status_t r = reader_reset_impl(reader);
     if (r != reader_status_ok) {
         reader->power = POWERED_OFF;
         return r;
     }
 
-    return reader_get_atr(reader, atr, length);
-}
-
-reader_status_t reader_reset_impl(Reader* reader) {
-    // TODO: reset reader and fill reader->atr and reader->atrLength
-    // TODO: return IFD_COMMUNICATION_ERROR if reset is failed due to unresponsive/absent card
-    // TODO: set reader->atrLength to 0 and return IFD_ERROR_POWER_ACTION if reset is failed for other reasons
-
-    // TODO: remove me
-    memcpy(reader->atr, kFakeAtr, kFakeAtrLen);
-    reader->atrLength = kFakeAtrLen;
-
-    return reader_status_ok;
-}
-
-reader_status_t reader_reset(Reader* reader, UCHAR const** atr, DWORD* length) {
-    reader_status_t r;
-
-    if (reader->power == POWERED_OFF) {
-        r = reader_power_on_impl(reader);
-
-        if (r != reader_status_ok) {
-            return r;
-        }
-
-        reader->power = POWERED_ON;
-    }
-
-    r = reader_reset_impl(reader);
-
-    if (r != reader_status_ok) {
-        return r;
-    }
+    reader->power = POWERED_ON;
 
     return reader_get_atr(reader, atr, length);
 }
@@ -172,9 +123,20 @@ reader_status_t reader_transmit(Reader* reader, UCHAR const* txBuffer, DWORD txL
 }
 
 reader_status_t reader_is_present(Reader* reader) {
-    reader_status_t r = reader_status_ok;
+    if (reader->presence == PRESENT_FALSE || reader->power == POWERED_OFF) {
+        reader->presence = PRESENT_FALSE;
+        reader_status_t r = reader_reset_impl(reader);
+        POPULATE_ERROR(r, reader_status_ok, reader_status_reader_not_found);
+    } else {
+        // TODO: FIX ME: Can not transmit APDU to check card presence, because it may break
+        // communication performed by upstack application with the card, if the presence
+        // check call occures when card expects GET DATA APDU in response to 61XX SW.
+    }
 
-    // TODO: check presence and return either reader_status_reader_not_found or reader_status_ok
+    reader->presence = PRESENT_TRUE;
+    return reader_status_ok;
+}
 
-    return r;
+reader_status_t reader_is_powered(const Reader* reader) {
+    return reader->power == POWERED_ON ? reader_status_ok : reader_status_reader_unpowered;
 }
