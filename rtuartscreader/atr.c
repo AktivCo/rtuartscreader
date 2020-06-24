@@ -137,7 +137,7 @@ atr_status_t read_atr(const transport_t* transport, atr_t* atr) {
             atr->td_offset[level] = i;
             atr->atr[i] = td;
 
-            init_atr_headers(&level_mask, HIOCT(td));
+            init_atr_headers(&level_mask, td);
         } else {
             break;
         }

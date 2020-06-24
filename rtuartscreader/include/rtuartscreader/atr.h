@@ -7,7 +7,12 @@
 
 #include <rtuartscreader/transport/transport_t.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PROTOCOL_T0 0
+#define PROTOCOL_T1 1
 #define MAX_PROTOCOL_VALUE 15
 
 typedef enum {
@@ -76,3 +81,7 @@ typedef struct atr_info {
 atr_status_t read_atr(const transport_t* transport, atr_t* info);
 
 atr_status_t parse_atr(const atr_t* atr, atr_info_t* info);
+
+#ifdef __cplusplus
+}
+#endif

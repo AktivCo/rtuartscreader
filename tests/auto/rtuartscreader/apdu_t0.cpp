@@ -12,12 +12,8 @@ using namespace std;
 namespace rtft = rt::faketransport;
 
 class TestT0 : public testing::Test {
-    virtual void SetUp() override {
-        rtft::initializeSendRecv();
-    }
     virtual void TearDown() override {
         rtft::resetCard();
-        rtft::deinitializeSendRecv();
     }
 };
 
