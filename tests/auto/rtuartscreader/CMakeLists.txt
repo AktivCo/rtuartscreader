@@ -14,6 +14,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
 target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra -Wno-unused-parameter)
 
 # Link test executable against gtest & gtest_main
+target_link_libraries(${PROJECT_NAME} gtest_main gmock rtuartscreader_static -static-libgcc -static-libstdc++)
 
 if (APPLE)
 	set(STATIC_CPP_LIBS)

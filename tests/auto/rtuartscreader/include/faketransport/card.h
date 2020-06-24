@@ -19,7 +19,6 @@ public:
 };
 
 void setCard(const std::shared_ptr<Card>& card);
-
 void resetCard();
 
 } // namespace faketransport

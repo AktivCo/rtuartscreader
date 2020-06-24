@@ -35,5 +35,3 @@ private:
 
     std::shared_ptr<rt::faketransport::Card> mCard;
 };
-
-extern std::unique_ptr<FakeSendRecv> gFakeSendRecv;

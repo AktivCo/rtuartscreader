@@ -9,6 +9,8 @@
 
 #include <faketransport/simplecard.h>
 
+#include "constants.h"
+
 using namespace std;
 using namespace testing;
 
@@ -54,14 +56,11 @@ public:
     }
 };
 
-namespace {
-initializer_list<uint8_t> kAtr2151{
+TEST_F(TestAtr, Rutoken2151) {
+    /*
     0x3b, 0x1a, 0x96, 0x72, 0x75, 0x74, 0x6f, 0x6b,
     0x65, 0x6e, 0x6d, 0x73, 0x63
-};
-} // namespace
-
-TEST_F(TestAtr, Rutoken2151) {
+    */
     vector<uint8_t> cardOutput{ kAtr2151 };
     setupCardOutput(cardOutput);
 
@@ -110,14 +109,11 @@ TEST_F(TestAtr, ParseRutoken2151) {
     }
 }
 
-namespace {
-initializer_list<uint8_t> kAtr2100T0{
+TEST_F(TestAtr, Rutoken2100T0) {
+    /*
     0x3b, 0x9c, 0x96, 0x00, 0x52, 0x75, 0x74, 0x6f,
     0x6b, 0x65, 0x6e, 0x45, 0x43, 0x50, 0x73, 0x63
-};
-} // namespace
-
-TEST_F(TestAtr, Rutoken2100T0) {
+    */
     vector<uint8_t> cardOutput{ kAtr2100T0 };
     setupCardOutput(cardOutput);
 
@@ -168,15 +164,12 @@ TEST_F(TestAtr, ParseRutoken2100T0) {
     });
 }
 
-namespace {
-initializer_list<uint8_t> kAtr2100T1{
+TEST_F(TestAtr, Rutoken2100T1) {
+    /*
     0x3b, 0x9c, 0x94, 0x80, 0x11, 0x40, 0x52, 0x75,
     0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x45, 0x43, 0x50,
     0x73, 0x63, 0xc3
-};
-} // namespace
-
-TEST_F(TestAtr, Rutoken2100T1) {
+    */
     vector<uint8_t> cardOutput{ kAtr2100T1 };
     setupCardOutput(cardOutput);
 

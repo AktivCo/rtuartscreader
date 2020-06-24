@@ -97,5 +97,14 @@ void deinitializeSendRecv() {
     transport_sendrecv_impl_reset();
 }
 
+void setCard(const std::shared_ptr<Card>& card) {
+    gFakeSendRecv->setCard(card);
+}
+
+void resetCard() {
+    gFakeSendRecv->resetCard();
+}
+
+
 } // namespace faketransport
 } // namespace rt

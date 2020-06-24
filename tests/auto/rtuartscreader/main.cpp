@@ -11,11 +11,11 @@ int main(int argc, char **argv) {
     srand(time(nullptr));
     ::testing::InitGoogleTest(&argc, argv);
 
-    rt::faketransport::initializeSendRecv();
+    rt::faketransport::initializeTransport();
 
     auto r = RUN_ALL_TESTS();
 
-    rt::faketransport::deinitializeSendRecv();
+    rt::faketransport::deinitializeTransport();
 
     return r;
 }
