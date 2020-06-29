@@ -8799,9 +8799,11 @@ static void switchFunctionOff(unsigned gpio)
    }
 }
 
-static void stopHardwarePWM(void)
+int stopHardwarePWM(void)
 {
    unsigned i, pwm;
+
+   CHECK_INITED;
 
    for (i=0; i<= PI_MAX_GPIO; i++)
    {
@@ -8816,6 +8818,8 @@ static void stopHardwarePWM(void)
          gpioInfo[i].is = GPIO_UNDEFINED;
       }
    }
+
+   return 0;
 }
 
 /* ----------------------------------------------------------------------- */
