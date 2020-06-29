@@ -36,8 +36,8 @@ This version is for pigpio version 70+
 #include <ctype.h>
 #include <inttypes.h>
 
-#include <pigpio/pigpio.h>
-#include <pigpio/command.h>
+#include "pigpio.h"
+#include "command.h"
 
 cmdInfo_t cmdInfo[]=
 {
@@ -575,7 +575,7 @@ static char * fmtPudStr="ODU";
 
 static int cmdMatch(char *str)
 {
-   unsigned i;
+   int i;
 
    for (i=0; i<(sizeof(cmdInfo)/sizeof(cmdInfo_t)); i++)
    {
@@ -1254,7 +1254,7 @@ int cmdParse(
 
 char * cmdErrStr(int error)
 {
-   unsigned i;
+   int i;
 
    for (i=0; i<(sizeof(errInfo)/sizeof(errInfo_t)); i++)
    {
@@ -1419,3 +1419,4 @@ int cmdParseScript(char *script, cmdScript_t *s, int diags)
    }
    return status;
 }
+
