@@ -16,8 +16,17 @@
     } while (0)
 
 hw_status_t hw_initialize_impl() {
-    if (gpioInitialise() == PI_INIT_FAILED)
+    const uint32_t gpioCfgInternals = PI_CFG_NOSIGHANDLER;
+    int r = gpioCfgSetInternals(gpioCfgInternals);
+    RETURN_ON_PIGPIO_ERROR(r);
+
+    r = gpioCfgInterfaces(PI_DISABLE_FIFO_IF | PI_DISABLE_SOCK_IF | PI_DISABLE_ALERT);
+    RETURN_ON_PIGPIO_ERROR(r);
+
+    r = gpioInitialise();
+    if (r != PIGPIO_VERSION) {
         return hw_status_failed;
+    }
 
     return hw_status_ok;
 }
