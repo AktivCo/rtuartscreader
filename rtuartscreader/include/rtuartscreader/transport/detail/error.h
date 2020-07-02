@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rtuartscreader/hardware.h>
+#include <rtuartscreader/hardware/hardware.h>
 #include <rtuartscreader/iso7816_3/status.h>
 #include <rtuartscreader/transport/status.h>
 #include <rtuartscreader/utils/error.h>

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <rtuartscreader/hardware.h>
+#include <rtuartscreader/hardware/hardware.h>
 #include <rtuartscreader/iso7816_3/atr.h>
 #include <rtuartscreader/iso7816_3/pps.h>
 #include <rtuartscreader/iso7816_3/utils.h>

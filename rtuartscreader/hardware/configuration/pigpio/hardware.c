@@ -1,4 +1,4 @@
-#include <rtuartscreader/hardware.h>
+#include <rtuartscreader/hardware/hardware.h>
 
 #include <pigpio/pigpio.h>
 
@@ -15,14 +15,14 @@
         }                            \
     } while (0)
 
-hw_status_t hw_initialize() {
+hw_status_t hw_initialize_impl() {
     if (gpioInitialise() == PI_INIT_FAILED)
         return hw_status_failed;
 
     return hw_status_ok;
 }
 
-hw_status_t hw_start_clock(uint32_t frequency) {
+hw_status_t hw_start_clock_impl(uint32_t frequency) {
     int r = gpioSetMode(PIN_PWM0, PI_ALT5);
     RETURN_ON_PIGPIO_ERROR(r);
 
@@ -32,14 +32,14 @@ hw_status_t hw_start_clock(uint32_t frequency) {
     return hw_status_ok;
 }
 
-hw_status_t hw_stop_clock() {
+hw_status_t hw_stop_clock_impl() {
     int r = stopHardwarePWM();
     RETURN_ON_PIGPIO_ERROR(r);
 
     return hw_status_ok;
 }
 
-hw_status_t hw_rst_initialize() {
+hw_status_t hw_rst_initialize_impl() {
     int r = gpioSetMode(PIN_SC_RST, PI_OUTPUT);
     RETURN_ON_PIGPIO_ERROR(r);
 
@@ -49,14 +49,14 @@ hw_status_t hw_rst_initialize() {
     return hw_status_ok;
 }
 
-hw_status_t hw_rst_down() {
+hw_status_t hw_rst_down_impl() {
     int r = gpioWrite(PIN_SC_RST, 0);
     RETURN_ON_PIGPIO_ERROR(r);
 
     return hw_status_ok;
 }
 
-hw_status_t hw_rst_down_up(uint32_t delay_us) {
+hw_status_t hw_rst_down_up_impl(uint32_t delay_us) {
     int r = gpioWrite(PIN_SC_RST, 0);
     RETURN_ON_PIGPIO_ERROR(r);
 
@@ -69,7 +69,7 @@ hw_status_t hw_rst_down_up(uint32_t delay_us) {
     return hw_status_ok;
 }
 
-hw_status_t hw_rst_deinitialize() {
+hw_status_t hw_rst_deinitialize_impl() {
     int r = gpioWrite(PIN_SC_RST, 0);
     RETURN_ON_PIGPIO_ERROR(r);
 
@@ -79,6 +79,10 @@ hw_status_t hw_rst_deinitialize() {
     return hw_status_ok;
 }
 
-void hw_deinitialize() {
+void hw_deinitialize_impl() {
     gpioTerminate();
 }
+
+#define PIMPL_NAME_PREFIX hw
+#define PIMPL_FUNCTIONS_DECLARATION_PATH <rtuartscreader/hardware/detail/hardware_functions.h>
+#include <rtuartscreader/pimpl/source.h>

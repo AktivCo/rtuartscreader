@@ -1,0 +1,8 @@
+DEFINE_FUNCTION(hw_status_t, hw_initialize)
+DEFINE_FUNCTION(hw_status_t, hw_start_clock, uint32_t)
+DEFINE_FUNCTION(hw_status_t, hw_stop_clock)
+DEFINE_FUNCTION(hw_status_t, hw_rst_initialize)
+DEFINE_FUNCTION(hw_status_t, hw_rst_down)
+DEFINE_FUNCTION(hw_status_t, hw_rst_down_up, uint32_t)
+DEFINE_FUNCTION(hw_status_t, hw_rst_deinitialize)
+DEFINE_FUNCTION(void, hw_deinitialize)

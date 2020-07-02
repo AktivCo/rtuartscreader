@@ -13,18 +13,18 @@ extern "C" {
 #endif
 
 // Declare functions defined in PIMPL_FUNCTIONS_DECLARATION_PATH
-#define DEFINE_FUNCTION(R, NAME, ARGS) R NAME ARGS;
+#define DEFINE_FUNCTION(R, NAME, ...) R NAME(__VA_ARGS__);
 #include PIMPL_FUNCTIONS_DECLARATION_PATH
 #undef DEFINE_FUNCTION
 
 // Declare pointer to functions defined in PIMPL_FUNCTIONS_DECLARATION_PATH
-#define DEFINE_FUNCTION(R, NAME, ARGS) typedef R(*NAME##_fn) ARGS;
+#define DEFINE_FUNCTION(R, NAME, ...) typedef R (*NAME##_fn)(__VA_ARGS__);
 #include PIMPL_FUNCTIONS_DECLARATION_PATH
 #undef DEFINE_FUNCTION
 
 // Declare struct of pointers to functions defined in PIMPL_FUNCTIONS_DECLARATION_PATH
 typedef struct BOOST_PP_CAT(PIMPL_NAME_PREFIX, _impl) {
-#define DEFINE_FUNCTION(DUMMY1, NAME, DUMMY2) NAME##_fn NAME;
+#define DEFINE_FUNCTION(DUMMY1, NAME, ...) NAME##_fn NAME;
 #include PIMPL_FUNCTIONS_DECLARATION_PATH
 #undef DEFINE_FUNCTION
 } BOOST_PP_CAT(PIMPL_NAME_PREFIX, _impl_t);

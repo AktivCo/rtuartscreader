@@ -24,13 +24,13 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} gtest_main rtuartscreader_static ${STATIC_CPP_LIBS})
 
-if (DEFINED RUN_TESTS)
+if (${RTUARTSCREADER_RUN_UNITTESTS} AND (${CMAKE_SYSTEM_PROCESSOR} STREQUAL ${CMAKE_HOST_SYSTEM_PROCESSOR}))
     add_custom_command(
         TARGET ${PROJECT_NAME}
         COMMENT "Run tests"
         POST_BUILD
         COMMAND ${PROJECT_BINARY_DIR}/${PROJECT_NAME}
     )
-endif(DEFINED RUN_TESTS)
+endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION "/usr/local/bin/")

@@ -1,8 +1,11 @@
 #include <boost/preprocessor/cat.hpp>
-#include <boost/preprocessor/repetition/enum.hpp>
-#include <boost/preprocessor/repetition/enum_params.hpp>
+#include <boost/preprocessor/comma_if.hpp>
+#include <boost/preprocessor/comparison/equal.hpp>
+#include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
+#include <boost/preprocessor/variadic/to_tuple.hpp>
+
 
 #ifndef PIMPL_NAME_PREFIX
 #error "Need PIMPL_NAME_PREFIX defined"
@@ -18,7 +21,7 @@
 
 
 // Declare global default impl struct object filled with function_name_impl values
-#define DEFINE_FUNCTION(DUMMY1, NAME, DUMMY2) .NAME = BOOST_PP_CAT(NAME, _impl),
+#define DEFINE_FUNCTION(DUMMY1, NAME, ...) .NAME = BOOST_PP_CAT(NAME, _impl),
 
 IMPL_TYPE G_DEFAULT_IMPL = {
 #include PIMPL_FUNCTIONS_DECLARATION_PATH
@@ -30,23 +33,39 @@ IMPL_TYPE G_DEFAULT_IMPL = {
 const IMPL_TYPE* G_IMPL = &G_DEFAULT_IMPL;
 
 // Implement public functions, calling impl functions from the global impl struct object
-#define EXPAND_ONE_ARG(Z, N, ARGS)  \
-    BOOST_PP_TUPLE_ELEM(Z, N, ARGS) \
+#define EXPAND_ONE_ARG(Z, N, ARGS)              \
+    BOOST_PP_COMMA_IF(BOOST_PP_NOT_EQUAL(N, 2)) \
+    BOOST_PP_TUPLE_ELEM(Z, N, ARGS)             \
     arg##N
-#define EXPAND_ARGS(ARGS) BOOST_PP_ENUM(BOOST_PP_TUPLE_SIZE(ARGS), EXPAND_ONE_ARG, ARGS)
 
-#define EXPAND_PARAMS(ARGS) BOOST_PP_ENUM_PARAMS(BOOST_PP_TUPLE_SIZE(ARGS), arg)
+#define EXPAND_ONE_PARAM(Z, N, ARGS)            \
+    BOOST_PP_COMMA_IF(BOOST_PP_NOT_EQUAL(N, 2)) \
+    arg##N
 
-#define DEFINE_FUNCTION(R, NAME, ARGS)            \
-    R NAME(EXPAND_ARGS(ARGS)) {                   \
-        return G_IMPL->NAME(EXPAND_PARAMS(ARGS)); \
+#define EXPAND_ARGS(...) BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_TUPLE_SIZE(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__)), \
+                                                 EXPAND_ONE_ARG, BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))
+
+#define EXPAND_PARAMS(...) BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_TUPLE_SIZE(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__)), \
+                                                   EXPAND_ONE_PARAM, BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))
+
+#define R(...) BOOST_PP_TUPLE_ELEM(0, BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))
+
+#define NAME(...) BOOST_PP_TUPLE_ELEM(1, BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))
+
+#define DEFINE_FUNCTION(...)                                          \
+    R(__VA_ARGS__)                                                    \
+    NAME(__VA_ARGS__)(EXPAND_ARGS(__VA_ARGS__)) {                     \
+        return G_IMPL->NAME(__VA_ARGS__)(EXPAND_PARAMS(__VA_ARGS__)); \
     }
 
 #include PIMPL_FUNCTIONS_DECLARATION_PATH
 
 #undef EXPAND_ONE_ARG
+#undef EXPAND_ONE_PARAM
 #undef EXPAND_ARGS
 #undef EXPAND_PARAMS
+#undef R
+#undef NAME
 #undef DEFINE_FUNCTION
 
 // Implement PIMPL_NAME_PREFIX_set function

@@ -4,7 +4,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <rtuartscreader/hardware.h>
+#include <rtuartscreader/hardware/hardware.h>
 #include <rtuartscreader/transport/detail/error.h>
 #include <rtuartscreader/transport/detail/transmit_params.h>
 
