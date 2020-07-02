@@ -40,6 +40,10 @@ log_level_t log_get_log_level() {
     return gLogLevel;
 }
 
+void log_set_log_level(log_level_t logLevel) {
+    gLogLevel = logLevel;
+}
+
 log_msg_function log_get_log_msg_function() {
     return gLogMsgFunction;
 }

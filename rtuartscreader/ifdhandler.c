@@ -12,6 +12,7 @@
 
 #include <rtuartscreader/ifdhandler_log.h>
 #include <rtuartscreader/log/init.h>
+#include <rtuartscreader/log/log.h>
 #include <rtuartscreader/reader.h>
 #include <rtuartscreader/reader_list.h>
 
@@ -266,8 +267,8 @@ RESPONSECODE IFDHTransmitToICC(DWORD Lun, SCARD_IO_HEADER SendPci, PUCHAR TxBuff
     LOG_INFO_RETURN_IFD(IFD_SUCCESS);
 }
 
-RESPONSECODE IFDHICCPresence(DWORD Lun) {
-    LOG_DEBUG("Lun: %lu", Lun);
+static RESPONSECODE doIFDHICCPresence(DWORD Lun) {
+    LOG_INFO("Lun: %lu", Lun);
 
     Reader* reader = reader_list_get_reader(Lun);
     if (!reader) {
@@ -281,5 +282,18 @@ RESPONSECODE IFDHICCPresence(DWORD Lun) {
         LOG_ERROR_RETURN_IFD(IFD_COMMUNICATION_ERROR, "reader_is_present failed: %d", r);
     }
 
-    LOG_DEBUG_RETURN_IFD(IFD_SUCCESS);
+    LOG_INFO_RETURN_IFD(IFD_SUCCESS);
+}
+
+RESPONSECODE IFDHICCPresence(DWORD Lun) {
+    log_level_t currentLogLevel = log_get_log_level();
+    if ((currentLogLevel & LOG_LEVEL_PERIODIC) != LOG_LEVEL_PERIODIC) {
+        log_set_log_level(LOG_LEVEL_CRITICAL);
+    }
+
+    RESPONSECODE r = doIFDHICCPresence(Lun);
+
+    log_set_log_level(currentLogLevel);
+
+    return r;
 }

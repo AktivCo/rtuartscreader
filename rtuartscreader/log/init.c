@@ -20,12 +20,15 @@ int log_convert_to_priority(log_level_t logLevel) {
     case LOG_LEVEL_CRITICAL: return PCSC_LOG_CRITICAL;
     case LOG_LEVEL_ERROR: return PCSC_LOG_ERROR;
     case LOG_LEVEL_INFO: return PCSC_LOG_INFO;
-    case LOG_LEVEL_DEBUG: return PCSC_LOG_DEBUG;
+    case LOG_LEVEL_PERIODIC: return PCSC_LOG_INFO;
     default: return PCSC_LOG_DEBUG;
     }
 }
 
-static const log_level_t kLogLevelAll = (LOG_LEVEL_CRITICAL | LOG_LEVEL_ERROR | LOG_LEVEL_INFO | LOG_LEVEL_DEBUG);
+static const log_level_t kLogLevelAll = (LOG_LEVEL_CRITICAL //
+                                         | LOG_LEVEL_ERROR  //
+                                         | LOG_LEVEL_INFO   //
+                                         | LOG_LEVEL_PERIODIC);
 
 static bool gLogIsInitialized = false;
 

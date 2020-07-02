@@ -15,7 +15,4 @@
 #define LOG_INFO_RETURN_IFD(rv) \
     LOG_RETURN(LOG_LEVEL_INFO, "OK", rv, ifd_error_to_string)
 
-#define LOG_DEBUG_RETURN_IFD(rv) \
-    LOG_RETURN(LOG_LEVEL_DEBUG, "OK", rv, ifd_error_to_string)
-
 static const char* ifd_error_to_string(int error);
