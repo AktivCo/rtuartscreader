@@ -1,3 +1,8 @@
+// Copyright (C) 2020, Aktiv-Soft JSC. All rights reserved.
+// This file is part of rtuart project licensed under the terms of the 2-clause
+// BSD license. See the LICENSE file found in the top-level directory of this
+// distribution.
+
 #include <rtuartscreader/utils/buffer_view.h>
 
 void pop_front_buffer_view_init(pop_front_buffer_view* buffer, const uint8_t* data, size_t size) {
