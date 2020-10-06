@@ -188,7 +188,7 @@ TEST_F(TestPps, MatchPpsResponseCantHavePps3) {
 }
 
 TEST_F(TestPps, MatchPpsResponseCanHaveEmptyPps1) {
-    f_d_index_t f_d_index = f_d_index_default;
+    f_d_index_t f_d_index = { 0x0a, 0x05 };
     uint8_t protocol = 0x0f;
 
     vector<uint8_t> cardOutput = { 0xFF, static_cast<uint8_t>(0x00 | protocol), 0x00 };
@@ -196,5 +196,5 @@ TEST_F(TestPps, MatchPpsResponseCanHaveEmptyPps1) {
 
     setupCardOutput(cardOutput);
 
-    EXPECT_EQ(iso7816_3_status_ok, do_pps_exchange(nullptr, &f_d_index, protocol));
+    EXPECT_EQ(iso7816_3_status_pps_exchange_use_default_f_d, do_pps_exchange(nullptr, &f_d_index, protocol));
 }

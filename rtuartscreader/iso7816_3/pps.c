@@ -170,7 +170,9 @@ static iso7816_3_status_t read_pps_response(const transport_t* transport, pps_t*
     return iso7816_3_status_ok;
 }
 
-static bool is_pps_exchange_success(const pps_t* pps_request, const pps_t* pps_response) {
+static iso7816_3_status_t get_pps_exchange_status(const pps_t* pps_request, const pps_t* pps_response) {
+    iso7816_3_status_t r = iso7816_3_status_ok;
+
     pps_info_t pps_info_request;
     parse_pps(pps_request, &pps_info_request);
 
@@ -178,48 +180,47 @@ static bool is_pps_exchange_success(const pps_t* pps_request, const pps_t* pps_r
     parse_pps(pps_response, &pps_info_response);
 
     if (pps_info_request.protocol != pps_info_response.protocol) {
-        return false;
+        LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
     }
 
     if (pps_info_request.pps1.is_present) {
         if (pps_info_response.pps1.is_present //
             && memcmp(&pps_info_request.pps1.f_d, &pps_info_response.pps1.f_d, sizeof(pps_info_request.pps1.f_d))) {
-            return false;
+            LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
         }
 
-        if (!pps_info_response.pps1.is_present //
-            && memcmp(&pps_info_request.pps1.f_d, &f_d_index_default, sizeof(pps_info_request.pps1.f_d))) {
-            return false;
+        if (!pps_info_response.pps1.is_present) {
+            r = iso7816_3_status_pps_exchange_use_default_f_d;
         }
     } else if (pps_info_response.pps1.is_present) {
-        return false;
+        LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
     }
 
     if (pps_info_request.pps2.is_present) {
         if (pps_info_response.pps2.is_present && pps_info_request.pps2.spu != pps_info_response.pps2.spu) {
-            return false;
+            LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
         }
 
         if (!pps_info_response.pps2.is_present && pps_info_request.pps2.spu != 0) {
-            return false;
+            LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
         }
     } else if (pps_info_response.pps2.is_present) {
-        return false;
+        LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
     }
 
     if (pps_info_request.pps3.is_present) {
         if (pps_info_response.pps3.is_present && pps_info_request.pps3.value != pps_info_response.pps3.value) {
-            return false;
+            LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
         }
 
         if (!pps_info_response.pps3.is_present && pps_info_request.pps3.value != 0) {
-            return false;
+            LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
         }
     } else if (pps_info_response.pps3.is_present) {
-        return false;
+        LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
     }
 
-    return true;
+    LOG_RETURN_ISO7816_3_ERROR(r);
 }
 
 iso7816_3_status_t do_pps_exchange(const transport_t* transport, const f_d_index_t* f_d_index, uint8_t protocol) {
@@ -234,9 +235,7 @@ iso7816_3_status_t do_pps_exchange(const transport_t* transport, const f_d_index
     if (atr_r != iso7816_3_status_ok)
         return atr_r;
 
-    if (!is_pps_exchange_success(&pps_request, &pps_response)) {
-        LOG_RETURN_ISO7816_3_ERROR(iso7816_3_status_pps_exchange_failed);
-    }
+    iso7816_3_status_t pps_r = get_pps_exchange_status(&pps_request, &pps_response);
 
-    return iso7816_3_status_ok;
+    return pps_r;
 }

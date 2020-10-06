@@ -216,13 +216,19 @@ static transport_status_t do_transport_reset(transport_t* transport, uint8_t atr
                                        "Card transmission parameters (F, D) are not supported");
     }
 
+    iso_r = do_pps_exchange(transport, &f_d_index, protocol);
+    if (iso_r != iso7816_3_status_ok)
+    {
+        if (iso_r == iso7816_3_status_pps_exchange_use_default_f_d)
+            f_d_index = f_d_index_default;
+        else
+            RETURN_ON_IS07816_3_ERROR(iso_r);
+    }
+
     // Assert F & D are OK
     transmit_params_t params;
     r = transmit_params_init(&f_d_index, &info, &params);
     POPULATE_ERROR(r, transport_status_ok, r);
-
-    iso_r = do_pps_exchange(transport, &f_d_index, protocol);
-    RETURN_ON_IS07816_3_ERROR(iso_r);
 
     r = transport_reinitialize(transport, &params);
     POPULATE_ERROR(r, transport_status_ok, r);

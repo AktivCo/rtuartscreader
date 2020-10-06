@@ -13,6 +13,7 @@ const char* iso7816_3_status_to_string(iso7816_3_status_t status) {
     case iso7816_3_status_invalid_params: return "iso7816_3_status_invalid_params";
     case iso7816_3_status_unexpected_card_response: return "iso7816_3_status_unexpected_card_response";
     case iso7816_3_status_pps_exchange_failed: return "iso7816_3_status_pps_exchange_failed";
+    case iso7816_3_status_pps_exchange_use_default_f_d: return "iso7816_3_status_pps_exchange_use_default_f_d";
     }
 
     return "unknown";
